@@ -79,3 +79,14 @@ Remove all scope actions
 #### unbindAll()
 
 Remove all actions
+
+#### unsafeUnbindKey(keysStr: string, scope?: string)
+
+Remove all actions for a key
+
+```javascript
+import { unsafeUnbindKey } from 'keybuddy';
+
+unsafeUnbindKey('option+e')
+unsafeUnbindKey('option+e', 'myScope')
+```

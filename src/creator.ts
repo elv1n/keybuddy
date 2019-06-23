@@ -31,15 +31,12 @@ export default (doc: HTMLDocument) => {
 		});
 	};
 
-	const unbindKey = (keysStr: string, scopeOrMethod: string | noop, methodOrNull: noop = () => {}) => {
-		const deleteScope: string = typeof scopeOrMethod === 'function' ? DEFAULT_SCOPE : scopeOrMethod;
-		const deleteMethod: noop = typeof scopeOrMethod === 'function' ? scopeOrMethod : methodOrNull;
-
+	const unbindKeyProcess = (keysStr: string, deleteMethod: null | noop, deleteScope: string = DEFAULT_SCOPE) => {
 		getKeyMap(keysStr).forEach(({code, mods}) => {
 			const handler = handlers[code];
 			if (Array.isArray(handler)) {
 				const handler = handlers[code].filter(({scope, method, mods: methodMods}: Handler) => {
-					return !(scope === deleteScope && method === deleteMethod && isEqArray(methodMods, mods));
+					return !(scope === deleteScope && isEqArray(methodMods, mods) && (deleteMethod === null ? true : method === deleteMethod));
 				});
 				if (handler.length) {
 					handlers[code] = handler;
@@ -48,6 +45,16 @@ export default (doc: HTMLDocument) => {
 				}
 			}
 		});
+	};
+
+	const unbindKey = (keysStr: string, scopeOrMethod: string | noop, methodOrNull: noop = () => {}) => {
+		const deleteScope: string = typeof scopeOrMethod === 'function' ? DEFAULT_SCOPE : scopeOrMethod;
+		const deleteMethod: noop = typeof scopeOrMethod === 'function' ? scopeOrMethod : methodOrNull;
+		return unbindKeyProcess(keysStr, deleteMethod, deleteScope);
+	};
+
+	const unsafeUnbindKey = (keysStr: string, scope?: string) => {
+		return unbindKeyProcess(keysStr, null, scope);
 	};
 
 	const fixedKey = (keyCode: number): number => keyCode === 93 || keyCode === 224 ? 91 : keyCode;
@@ -107,5 +114,5 @@ export default (doc: HTMLDocument) => {
 	doc.addEventListener('keydown', dispatch);
 	doc.addEventListener('keyup', cleanUp);
 
-	return {bind: bindKey, unbind: unbindKey, unbindScope, setScope, unbindAll, getScope: () => activeScope};
+	return {bind: bindKey, unbind: unbindKey, unsafeUnbind: unsafeUnbindKey, unbindScope, setScope, unbindAll, getScope: () => activeScope};
 };

@@ -1,7 +1,7 @@
 import {fireEvent} from '@testing-library/dom';
 import {KEY_E, KEY_R, KEY_ALT, KEY_LEFT_CMD} from 'keycode-js';
 
-import {bindKey, setScope, unbindAll, unbindScope, unbindKey} from '../index';
+import {bindKey, setScope, unbindAll, unbindScope, unbindKey, unsafeUnbindKey} from '../index';
 import {getKeyMap} from '../helpers/keymap';
 import {DEFAULT_SCOPE, SPECIAL} from '../constants';
 
@@ -270,5 +270,37 @@ describe('document', () => {
 
 		expect(spy).toHaveBeenCalledTimes(1);
 		expect(spy).toHaveBeenCalledTimes(1);
+	});
+
+	it('should unbind without method', () => {
+		const spy = jest.fn();
+		const keys = 'command+shift+w+p';
+		bindKey(keys, spy);
+		unsafeUnbindKey(keys);
+		downKeymap(keys);
+		upKeymap(keys);
+		expect(spy).toHaveBeenCalledTimes(0);
+	});
+
+	it('should not unbind without method for scope', () => {
+		const spy = jest.fn();
+		const keys = 'command+shift+w+p';
+		bindKey(keys, spy);
+
+		unsafeUnbindKey(keys, TEST_SCOPE);
+		downKeymap(keys);
+		upKeymap(keys);
+		expect(spy).toHaveBeenCalledTimes(1);
+	});
+
+	it('should not unbind without method for scope', () => {
+		const spy = jest.fn();
+		const keys = 'command+shift+w+p';
+		bindKey(keys, TEST_SCOPE, spy);
+
+		unsafeUnbindKey(keys, TEST_SCOPE);
+		downKeymap(keys);
+		upKeymap(keys);
+		expect(spy).toHaveBeenCalledTimes(0);
 	});
 });
