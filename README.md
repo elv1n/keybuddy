@@ -26,7 +26,8 @@ Differences:
 1. Completely rewritten in modern js using TS
 1. Support multiple keystrokes
 1. Custom scope not conflicting with default one
-1. Unbind only providing action
+1. Unbind requires an action (unsafeUnbindKey for backward compatibility)
+1. Creator instance to replace document with any other DOM element 
 1. More explicit API
 1. Provides new fixes and maintaining
 
