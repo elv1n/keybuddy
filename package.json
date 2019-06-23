@@ -1,0 +1,75 @@
+{
+  "name": "keybuddy",
+  "version": "0.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "author": {
+    "email": "elvin.d@outlook.com",
+    "name": "Elvin Dzhavadov"
+  },
+  "repository": "https://github.com/elv1n/keybuddy",
+  "scripts": {
+    "test": "jest --verbose false",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "npm run type-check -- --watch",
+    "build": "rimraf ./dist && npm run build:types && npm run build:js && node ./scripts/clone-pkg.js",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:js": "babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
+    "@babel/preset-typescript": "^7.3.3",
+    "@testing-library/dom": "^5.2.1",
+    "@types/jest": "^24.0.15",
+    "@typescript-eslint/eslint-plugin": "^1.10.2",
+    "@typescript-eslint/parser": "^1.10.2",
+    "babel-eslint": "^10.0.2",
+    "build-react-library": "^0.3.0",
+    "eslint-config-xo-typescript": "^0.14.0",
+    "fs-extra": "^8.0.1",
+    "jest": "^24.8.0",
+    "keycode-js": "^1.0.4",
+    "rimraf": "^2.6.3",
+    "typescript": "^3.5.2",
+    "xo": "^0.24.0"
+  },
+  "eslintConfig": {
+    "extends": [
+      "xo",
+      "xo-typescript"
+    ],
+    "env": {
+      "browser": true,
+      "jest": true
+    },
+    "rules": {
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/explicit-function-return-type": "off"
+    }
+  },
+  "nyc": {
+    "extension": [
+      ".ts"
+    ]
+  },
+  "xo": {
+    "extends": "xo-typescript",
+    "extensions": [
+      "ts"
+    ],
+    "rules": {
+      "import/named": "off",
+      "import/no-unresolved": "off",
+      "import/first": "off",
+      "import/newline-after-import": "off",
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/await-thenable": "off"
+    }
+  }
+}
