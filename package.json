@@ -15,7 +15,8 @@
     "build": "rimraf ./dist && npm run build:types && npm run build:js",
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "cross-env NODE_ENV=development babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline",
-    "postversion": "node ./scripts/clone-pkg.js"
+    "postversion": "node ./scripts/clone-pkg.js",
+    "release": "np --contents dist"
   },
   "dependencies": {},
   "devDependencies": {
@@ -58,9 +59,6 @@
     "extension": [
       ".ts"
     ]
-  },
-  "np": {
-    "contents": "dist"
   },
   "xo": {
     "extends": "xo-typescript",
