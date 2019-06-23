@@ -90,3 +90,20 @@ import { unsafeUnbindKey } from 'keybuddy';
 unsafeUnbindKey('option+e')
 unsafeUnbindKey('option+e', 'myScope')
 ```
+
+
+### Keybuddy creator
+
+Keybuddy creator can be used to replace key bindings on document
+
+```javascript
+import creator from 'keybuddy/creator';
+const iframe = document.getElementById('#iframe').contentWindow;
+
+/**
+* { bind, unbind, unsafeUnbind, unbindScope, setScope, unbindAll, getScope:}
+*/
+const myKeybuddy = creator(iframe) 
+
+myKeybuddy.bind('alt+b', action);
+```
