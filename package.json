@@ -12,9 +12,10 @@
     "test": "jest --verbose false",
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check -- --watch",
-    "build": "rimraf ./dist && npm run build:types && npm run build:js && node ./scripts/clone-pkg.js",
+    "build": "rimraf ./dist && npm run build:types && npm run build:js",
     "build:types": "tsc --emitDeclarationOnly",
-    "build:js": "babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline"
+    "build:js": "babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline",
+    "postversion": "node ./scripts/clone-pkg.js"
   },
   "dependencies": {},
   "devDependencies": {
