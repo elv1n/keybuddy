@@ -9,7 +9,7 @@ interface Handler {
 	mods: number[];
 }
 
-export default (doc: HTMLDocument) => {
+export default (doc?: HTMLDocument) => {
 	let handlers: { [key: string]: Handler[]} = {};
 	let downKeys: number[] = [];
 	let activeScope = DEFAULT_SCOPE;
@@ -111,8 +111,10 @@ export default (doc: HTMLDocument) => {
 		handlers = {};
 	};
 
-	doc.addEventListener('keydown', dispatch);
-	doc.addEventListener('keyup', cleanUp);
+	if (doc) {
+		doc.addEventListener('keydown', dispatch);
+		doc.addEventListener('keyup', cleanUp);
+	}
 
 	return {bind: bindKey, unbind: unbindKey, unsafeUnbind: unsafeUnbindKey, unbindScope, setScope, unbindAll, getScope: () => activeScope};
 };
