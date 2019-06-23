@@ -12,7 +12,11 @@ module.exports = {
 		'@babel/proposal-object-rest-spread'
 	],
 
-	ignore: [
-		'**/__tests__'
-	]
+	env: {
+		development: {
+			ignore: [
+				'**/__tests__'
+			]
+		}
+	}
 };
