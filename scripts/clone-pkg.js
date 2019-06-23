@@ -14,6 +14,7 @@ async function createPackageFile() {
 		workspaces,
 		eslintConfig,
 		xo,
+		np,
 		...packageDataOther
 	} = JSON.parse(packageData);
 	const newPackageData = {

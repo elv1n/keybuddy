@@ -59,6 +59,9 @@
       ".ts"
     ]
   },
+  "np": {
+    "contents": "dist"
+  },
   "xo": {
     "extends": "xo-typescript",
     "extensions": [
