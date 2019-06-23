@@ -15,6 +15,7 @@
     "build": "rimraf ./dist && npm run build:types && npm run build:js",
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "cross-env NODE_ENV=development babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline",
+    "preversion": "yarn build",
     "postversion": "node ./scripts/clone-pkg.js",
     "release": "np --contents dist"
   },
