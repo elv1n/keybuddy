@@ -85,16 +85,16 @@ Remove all actions
 
 Remove all actions for a key
 
-#### destroy()
-
-Remove all actions and event listeners
-
 ```javascript
 import { unsafeUnbindKey } from 'keybuddy';
 
 unsafeUnbindKey('option+e')
 unsafeUnbindKey('option+e', 'myScope')
 ```
+
+#### destroy()
+
+Remove all actions and event listeners
 
 
 ### Keybuddy creator
