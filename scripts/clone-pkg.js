@@ -32,6 +32,8 @@ async function createPackageFile() {
 	);
 	console.log(`Created package.json in ${targetPath}`);
 
+	await fs.copy(join(root, 'README.md'), join(root, 'dist/README.md'));
+
 	return newPackageData;
 }
 

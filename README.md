@@ -85,6 +85,10 @@ Remove all actions
 
 Remove all actions for a key
 
+#### destroy()
+
+Remove all actions and event listeners
+
 ```javascript
 import { unsafeUnbindKey } from 'keybuddy';
 

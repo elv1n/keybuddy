@@ -111,10 +111,27 @@ export default (doc?: HTMLDocument) => {
 		handlers = {};
 	};
 
+	const reset = () => {
+		downKeys = [];
+	};
+
+	const destroy = () => {
+		downKeys = [];
+		handlers = {};
+		if (doc) {
+			doc.removeEventListener('keydown', dispatch);
+			doc.removeEventListener('keyup', cleanUp);
+			// Reset all on window focus
+			window.removeEventListener('focus', reset);
+		}
+	};
+
 	if (doc) {
 		doc.addEventListener('keydown', dispatch);
 		doc.addEventListener('keyup', cleanUp);
+		// Reset all on window focus
+		window.addEventListener('focus', reset);
 	}
 
-	return {bind: bindKey, unbind: unbindKey, unsafeUnbind: unsafeUnbindKey, unbindScope, setScope, unbindAll, getScope: () => activeScope};
+	return {bind: bindKey, unbind: unbindKey, unsafeUnbind: unsafeUnbindKey, unbindScope, setScope, unbindAll, getScope: () => activeScope, destroy};
 };
