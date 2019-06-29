@@ -1,15 +1,19 @@
 import {DEFAULT_SCOPE} from './constants';
 import {getKeyMap} from './helpers/keymap';
 import {isEqArray} from './helpers/data';
+import {isEditable} from './helpers/browser';
 
 type noop = (e: KeyboardEvent) => any;
+type FilterFn = (el: KeyboardEvent) => boolean;
 interface Handler {
 	scope: string;
 	method: noop;
 	mods: number[];
 }
 
-export default (doc?: HTMLDocument) => {
+const defaultFilter = (e: KeyboardEvent) => e && !isEditable(e.target as HTMLElement);
+
+export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
 	let handlers: { [key: string]: Handler[]} = {};
 	let downKeys: number[] = [];
 	let activeScope = DEFAULT_SCOPE;
@@ -62,6 +66,11 @@ export default (doc?: HTMLDocument) => {
 	const dispatch = (e: KeyboardEvent) => {
 		const {keyCode} = e;
 		const key = fixedKey(keyCode);
+
+		if (!filterFn(e)) {
+			return;
+		}
+
 		if (!downKeys.includes(key)) {
 			downKeys.push(key);
 		}

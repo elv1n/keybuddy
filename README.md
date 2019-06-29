@@ -97,18 +97,21 @@ unsafeUnbindKey('option+e', 'myScope')
 Remove all actions and event listeners
 
 
-### Keybuddy creator
+### creator(doc: HTMLDocument | HTMLElement, filterFn?)
 
 Keybuddy creator can be used to replace key bindings on document
+
+*filterFn* by default skip all editable areas - contenteditable, input, select, textarea
+
+The reasons that events like onpaste, oncopy want fire keyup event for key bindings
 
 ```javascript
 import creator from 'keybuddy/creator';
 const iframe = document.getElementById('#iframe').contentWindow;
-
 /**
 * { bind, unbind, unsafeUnbind, unbindScope, setScope, unbindAll, getScope:}
 */
-const myKeybuddy = creator(iframe) 
+const myKeybuddy = creator(iframe, filterFn?) 
 
 myKeybuddy.bind('alt+b', action);
 ```
