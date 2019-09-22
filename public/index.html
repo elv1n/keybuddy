@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Keybuddy cypress</title>
+    <script src = "bundle.js"></script>
+</head>
+<body>
+<script>
+  const keybuddy = require('keybuddy');
+  window.keybuddy = keybuddy;
+  const { bindKey } = keybuddy;
+  bindKey('shift+e+w', e => {
+    console.log('shift+e+w');
+  });
+  bindKey('command+shift+z', e => {
+    console.log('cmd+shift+z');
+  });
+</script >
+</body>
+</html>
