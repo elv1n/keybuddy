@@ -18,6 +18,7 @@
     "browse": "yarn build:js && yarn browserify -r ./dist/index.js:keybuddy -o public/bundle.js",
     "ws": "ws --spa index.html -d public",
     "e2e": "cypress open",
+    "test": "cypress run --browser chrome",
     "postversion": "node ./scripts/clone-pkg.js",
     "release": "np --contents dist"
   },
