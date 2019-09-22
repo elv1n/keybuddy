@@ -2,6 +2,7 @@ import { Modifiers, MODIFIERS, MODIFIERS_MAP } from '../../src/constants';
 import { getKeyCode } from '../../src/helpers/keymap';
 
 import { specials } from '../constants';
+import { fireCombination } from '../helpers';
 
 const type = (string: string) => cy.get('body').type(string);
 
@@ -70,71 +71,51 @@ context('Test browser bindings', () => {
       },
       [] as string[]
     );
-    interface Events {
-      mods: {
-        [key: string]: boolean;
-      };
-      keys: {
-        key: string;
-        keyCode: number;
-      }[];
-    }
+
     cy.window().then(({ keybuddy: { bindKey, unbindKey } }) => {
-      const testCase = (num: number) => {
+      const testCase = (num: number): void => {
         const combination = combinations[num];
         if (!combination) {
           return;
         }
 
-        const events = combination.split('+').reduce(
-          (acc, key) => {
-            if ({}.hasOwnProperty.call(MODIFIERS, key)) {
-              const modKey = MODIFIERS_MAP[MODIFIERS[key as keyof Modifiers]];
-              acc.mods[modKey] = true;
-            } else {
-              acc.keys.push({
-                key,
-                keyCode: getKeyCode(key)
-              });
-            }
-            return acc;
-          },
-          {
-            mods: {},
-            keys: []
-          } as Events
-        );
         const fn = cy.stub();
         bindKey(combination, fn);
+        fireCombination(combination, () => {
+          expect(fn).to.have.callCount(1);
+          testCase(num + 1);
+        });
+      };
+      testCase(0);
+    });
+  });
+  it('should not fire on different modes', () => {
+    const basic = [
+      ['shift+s', 'control+shift+s'],
+      ['shift+s', 'alt+shift+s'],
+      ['shift+s', 'command+shift+s'],
+      ['alt+s', 'alt+command+s'],
+      ['alt+s', 'alt+control+s'],
+      ['command+s', 'control+command+s'],
+      ['control+s', 'control+alt+s']
+    ];
+    const combinations = basic.concat(
+      basic.map(([arg1, arg2]) => [arg2, arg1])
+    );
 
-        const keyUp = () => {
-          events.keys.forEach((key, index) => {
-            cy.document()
-              .trigger('keyup', {
-                ...key,
-                ...events.mods
-              })
-              .then(() => {
-                if (index === events.keys.length - 1) {
-                  unbindKey(combination, fn);
-                  testCase(num + 1);
-                }
-              });
-          });
-        };
+    cy.window().then(({ keybuddy: { bindKey, unbindKey } }) => {
+      const testCase = (num: number): void => {
+        const combination = combinations[num];
+        if (!combination) {
+          return;
+        }
+        const [original, fired] = combination;
 
-        events.keys.forEach((key, index) => {
-          cy.document()
-            .trigger('keydown', {
-              ...key,
-              ...events.mods
-            })
-            .then(() => {
-              if (index === events.keys.length - 1) {
-                expect(fn).to.have.callCount(1);
-                keyUp();
-              }
-            });
+        const fn = cy.stub();
+        bindKey(original, fn);
+        fireCombination(fired, () => {
+          expect(fn).to.have.callCount(0);
+          testCase(num + 1);
         });
       };
       testCase(0);

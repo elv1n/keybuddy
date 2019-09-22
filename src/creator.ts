@@ -6,7 +6,7 @@ import {
   ModifierKeys
 } from './constants';
 import { getKeyMap, ParsedShortcut } from './helpers/keymap';
-import { isEqArray } from './helpers/data';
+import { isEqArray, isBoolArrayToObject } from './helpers/data';
 import { isEditable } from './helpers/browser';
 
 type noop = (e: KeyboardEvent) => void;
@@ -145,8 +145,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
         }
 
         return (
-          isEqArray(special, downKeys) &&
-          mods.every(key => modifiers[key as keyof ModifierMap])
+          isEqArray(special, downKeys) && isBoolArrayToObject(mods, modifiers)
         );
       })
       .map(({ method }: Handler) => method(e));

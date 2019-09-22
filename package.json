@@ -54,7 +54,8 @@
       "@typescript-eslint/interface-name-prefix": [
         "error",
         "never"
-      ]
+      ],
+      "no-restricted-syntax": "off"
     },
     "env": {
       "browser": true
