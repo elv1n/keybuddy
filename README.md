@@ -44,14 +44,17 @@ The following special keys can be used for shortcuts:
 
 ## API
 
-#### bindKey(keysStr: string, scopeOrMethod: string | () => {}, actionOrNothing?)
+#### bindKey(keysStr: string, scopeOrMethod: string | () => {}, actionOrNothing?, {skipOther: boolean}?)
 
 ```javascript
-import key from 'keybuddy';
+import key, { DEFAULT_SCOPE } from 'keybuddy';
 // import { bindKey } from 'keybuddy';
 
-bindKey('option+e', action)
-bindKey('option+e', 'myScope', action)
+bindKey('option+e', action);
+bindKey('option+e', 'myScope', action);
+// use skipOther option to make primary action on same key bindings
+bindKey('option+e', DEFAULT_SCOPE, action, { skipOther: true });
+bindKey('option+e', 'myScope', action, { skipOther: true });
 ```
 
 #### unbindKey(keysStr: string, scopeOrMethod: string | () => {}, actionOrNothing?)
