@@ -69,13 +69,11 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
         handlers[code] = [];
       }
       const handler = handlers[code];
-      console.log(process.env.NODE_ENV);
       if (process.env.NODE_ENV === 'development') {
         if (skipOther) {
           const action = handler.find(i => i.skipOther);
-          console.log(action);
           invariant(
-            Boolean(action),
+            !action,
             "Conflicting 'skipOther' property with action",
             action
           );
@@ -161,8 +159,8 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
       return;
     }
 
-    handlers[key]
-      .filter(({ scope, shortcut: { special, mods } }) => {
+    const currentHandlers = handlers[key].filter(
+      ({ scope, shortcut: { special, mods } }) => {
         if (scope !== activeScope) {
           return false;
         }
@@ -170,8 +168,19 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
         return (
           isEqArray(special, downKeys) && isBoolArrayToObject(mods, modifiers)
         );
-      })
-      .map(({ method }: Handler) => method(e));
+      }
+    );
+
+    const primaryAction: Handler | undefined = currentHandlers.find(
+      action => action.skipOther
+    );
+    if (primaryAction) {
+      primaryAction.method(e);
+    } else {
+      currentHandlers.forEach(({ method }) => {
+        method(e);
+      });
+    }
   };
 
   const cleanUp = (e: KeyboardEvent) => {

@@ -1,5 +1,3 @@
-import { SPECIAL } from '../../src/constants';
-
 import { specials } from '../constants';
 import { fireCombination } from '../helpers';
 
@@ -138,6 +136,51 @@ context('Test browser bindings', () => {
         });
       };
       testCase(0);
+    });
+  });
+  it('should call only skipOther', () => {
+    cy.onReady(({ bindKey, unbindAll, DEFAULT_SCOPE }) => {
+      const combination = 'alt+f';
+      const cases = Array(3).fill(null);
+      const testCase = (num: number): void => {
+        if (num === 3) {
+          return;
+        }
+        const stubs = cases.map(() => cy.stub());
+
+        cases.forEach((_, index) => {
+          bindKey(
+            combination,
+            DEFAULT_SCOPE,
+            stubs[index],
+            index === num ? { skipOther: true } : undefined
+          );
+        });
+        fireCombination(combination, () => {
+          cases.forEach((_, index) => {
+            expect(stubs[index]).to.have.callCount(num === index ? 1 : 0);
+          });
+          unbindAll();
+          testCase(num + 1);
+        });
+      };
+      testCase(0);
+    });
+  });
+  it('should call all without skipOther', () => {
+    cy.onReady(({ bindKey, DEFAULT_SCOPE }) => {
+      const combination = 'alt+f';
+      const fn1 = cy.stub();
+      const fn2 = cy.stub();
+      const fn3 = cy.stub();
+      bindKey(combination, DEFAULT_SCOPE, fn1);
+      bindKey(combination, DEFAULT_SCOPE, fn2);
+      bindKey(combination, DEFAULT_SCOPE, fn3);
+      fireCombination(combination, () => {
+        expect(fn1).to.be.calledOnce;
+        expect(fn2).to.be.calledOnce;
+        expect(fn3).to.be.calledOnce;
+      });
     });
   });
 });
