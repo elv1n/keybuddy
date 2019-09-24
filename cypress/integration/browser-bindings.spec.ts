@@ -1,5 +1,4 @@
-import { Modifiers, MODIFIERS, MODIFIERS_MAP } from '../../src/constants';
-import { getKeyCode } from '../../src/helpers/keymap';
+import { SPECIAL } from '../../src/constants';
 
 import { specials } from '../constants';
 import { fireCombination } from '../helpers';
@@ -33,7 +32,7 @@ context('Test browser bindings', () => {
         })
         .join('');
 
-    cy.window().then(({ keybuddy: { bindKey, unbindKey } }) => {
+    cy.onReady(({ bindKey, unbindKey }) => {
       const testCase = (num: number) => {
         if (num === globalCases.length - 1) {
           return;
@@ -72,7 +71,7 @@ context('Test browser bindings', () => {
       [] as string[]
     );
 
-    cy.window().then(({ keybuddy: { bindKey, unbindKey } }) => {
+    cy.onReady(({ bindKey }) => {
       const testCase = (num: number): void => {
         const combination = combinations[num];
         if (!combination) {
@@ -103,7 +102,7 @@ context('Test browser bindings', () => {
       basic.map(([arg1, arg2]) => [arg2, arg1])
     );
 
-    cy.window().then(({ keybuddy: { bindKey, unbindKey } }) => {
+    cy.onReady(({ bindKey }) => {
       const testCase = (num: number): void => {
         const combination = combinations[num];
         if (!combination) {
@@ -115,6 +114,26 @@ context('Test browser bindings', () => {
         bindKey(original, fn);
         fireCombination(fired, () => {
           expect(fn).to.have.callCount(0);
+          testCase(num + 1);
+        });
+      };
+      testCase(0);
+    });
+  });
+  it('should test special', () => {
+    const combinations = ['alt+left', 'alt+right'];
+
+    cy.onReady(({ bindKey }) => {
+      const testCase = (num: number): void => {
+        const combination = combinations[num];
+        if (!combination) {
+          return;
+        }
+
+        const fn = cy.stub();
+        bindKey(combination, fn);
+        fireCombination(combination, () => {
+          expect(fn).to.have.callCount(1);
           testCase(num + 1);
         });
       };

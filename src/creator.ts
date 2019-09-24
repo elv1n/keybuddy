@@ -1,3 +1,4 @@
+import invariant from 'invariant';
 import {
   DEFAULT_SCOPE,
   MODIFIERS_KEYS,
@@ -16,6 +17,7 @@ interface Handler {
   scope: string;
   method: noop;
   shortcut: ParsedShortcut;
+  skipOther: boolean;
 }
 
 const defaultFilter = (e: KeyboardEvent): boolean =>
@@ -48,7 +50,14 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
   const bindKey = (
     keysStr: string,
     scopeOrMethod: string | noop,
-    methodOrNull: noop = () => {}
+    methodOrNull: noop = () => {},
+    {
+      skipOther
+    }: {
+      skipOther: boolean;
+    } = {
+      skipOther: false
+    }
   ): void => {
     const scope: string =
       typeof scopeOrMethod === 'function' ? DEFAULT_SCOPE : scopeOrMethod;
@@ -59,11 +68,25 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
       if (!handlers[code]) {
         handlers[code] = [];
       }
+      const handler = handlers[code];
+      console.log(process.env.NODE_ENV);
+      if (process.env.NODE_ENV === 'development') {
+        if (skipOther) {
+          const action = handler.find(i => i.skipOther);
+          console.log(action);
+          invariant(
+            Boolean(action),
+            "Conflicting 'skipOther' property with action",
+            action
+          );
+        }
+      }
 
-      handlers[code].push({
+      handler.push({
         scope,
         method,
-        shortcut
+        shortcut,
+        skipOther
       });
     });
   };

@@ -9,20 +9,23 @@
   },
   "repository": "https://github.com/elv1n/keybuddy",
   "scripts": {
+    "start": "cross-env NODE_ENV=development babel src --out-dir dist --extensions \".ts,.tsx\" --watch",
     "type-check": "tsc --noEmit",
-    "type-check:watch": "npm run type-check -- --watch",
+    "type-check:watch": "yarn type-check --watch",
     "build": "rimraf ./dist && npm run build:types && npm run build:js",
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "cross-env NODE_ENV=development babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline",
     "preversion": "yarn build",
-    "browse": "yarn build:js && yarn browserify -r ./dist/index.js:keybuddy -o public/bundle.js",
+    "browse": "watchify -r ./dist/index.js:keybuddy -o public/bundle.js",
     "ws": "ws --spa index.html -d public",
     "e2e": "cypress open",
     "test": "cypress run --browser chrome",
     "postversion": "node ./scripts/clone-pkg.js",
     "release": "np --contents dist"
   },
-  "dependencies": {},
+  "dependencies": {
+    "invariant": "^2.2.4"
+  },
   "devDependencies": {
     "@babel/cli": "7.5.0",
     "@babel/core": "7.5.4",
@@ -32,6 +35,8 @@
     "@babel/preset-typescript": "^7.3.3",
     "@cypress/webpack-preprocessor": "^4.1.0",
     "@testing-library/dom": "5.6.0",
+    "@types/invariant": "^2.2.30",
+    "@types/node": "^12.7.7",
     "babel-eslint": "^10.0.2",
     "babel-loader": "^8.0.6",
     "browserify": "^16.5.0",
@@ -45,6 +50,7 @@
     "local-web-server": "^3.0.7",
     "rimraf": "^2.6.3",
     "typescript": "3.6.3",
+    "watchify": "^3.11.1",
     "webpack": "^4.40.2"
   },
   "eslintConfig": {
@@ -62,7 +68,8 @@
       "browser": true
     },
     "globals": {
-      "cy": true
+      "cy": true,
+      "Cypress": true
     }
   },
   "nyc": {

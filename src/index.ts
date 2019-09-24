@@ -1,4 +1,5 @@
 import creator from './creator';
+import { DEFAULT_SCOPE } from './constants';
 
 const {
   bind,
@@ -14,5 +15,5 @@ const {
 export const bindKey = bind;
 export const unbindKey = unbind;
 export const unsafeUnbindKey = unsafeUnbind;
-export { setScope, unbindScope, unbindAll, getScope, destroy };
+export { setScope, unbindScope, unbindAll, getScope, destroy, DEFAULT_SCOPE };
 export default bind;

@@ -25,9 +25,27 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 import * as keyBuddy from '../../src';
 
+const onReady = (
+  callback: (keybuddy: typeof keyBuddy) => void
+): Cypress.Chainable<Window> =>
+  cy.window().then(({ keybuddy }) => {
+    callback(keybuddy);
+  });
+
+// eslint-disable-next-line @typescript-eslint/no-use-before-define
+Cypress.Commands.add('onReady', onReady);
+
 declare global {
   interface Window {
     // eslint-disable-next-line no-undef
     keybuddy: typeof keyBuddy;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-namespace,no-redeclare
+  namespace Cypress {
+    interface Chainable {
+      // eslint-disable-next-line no-undef
+      onReady: typeof onReady;
+    }
   }
 }
