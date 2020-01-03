@@ -4,11 +4,12 @@ import {
   MODIFIERS_KEYS,
   MODIFIERS_MAP,
   ModifierMap,
-  ModifierKeys
+  ModifierKeys,
+  CAPS_LOCK
 } from './constants';
 import { getKeyMap, ParsedShortcut } from './helpers/keymap';
 import { isEqArray, isBoolArrayToObject } from './helpers/data';
-import { isEditable } from './helpers/browser';
+import { isEditable, isFirefox } from './helpers/browser';
 
 type noop = (e: KeyboardEvent) => void;
 type FilterFn = (el: KeyboardEvent) => boolean;
@@ -32,13 +33,10 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
   let downKeys: number[] = [];
   let activeScope = DEFAULT_SCOPE;
 
-  const modifiers: Mods = MODIFIERS_KEYS.reduce(
-    (acc, key) => {
-      acc[key] = false;
-      return acc;
-    },
-    {} as Mods
-  );
+  const modifiers: Mods = MODIFIERS_KEYS.reduce((acc, key) => {
+    acc[key] = false;
+    return acc;
+  }, {} as Mods);
   const modsKeys = Object.keys(modifiers).map(i => Number(i)) as ModifierKeys;
 
   const updateModifiers = (e: KeyboardEvent): void => {
@@ -142,6 +140,12 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     const key = fixedKey(keyCode);
 
     if (!filterFn(e)) {
+      return;
+    }
+
+    // fix firefox behavior when caps lock fires three times onkeydown
+    // and don't fire at all onkeyup (Firefox 72)
+    if (isFirefox && key === CAPS_LOCK) {
       return;
     }
 

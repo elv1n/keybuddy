@@ -84,3 +84,4 @@ export const SPECIAL: { [key: string]: number } = {
   ']': 221,
   '\\': 220
 };
+export const CAPS_LOCK = 20;
