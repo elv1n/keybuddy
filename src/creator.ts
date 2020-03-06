@@ -210,7 +210,13 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     const { keyCode } = e;
     const key = fixedKey(keyCode);
 
-    downKeys = downKeys.filter(i => i !== key);
+    // clean all for meta.
+    // Main reason is ctrl+z (or any other native command not fires letter keyup on editable inputs)
+    if (e.key && e.key.toLowerCase() === 'meta') {
+      downKeys = [];
+    } else {
+      downKeys = downKeys.filter(i => i !== key);
+    }
     log(`Cleanup for ${key}`, downKeys);
   };
 
