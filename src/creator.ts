@@ -1,4 +1,5 @@
 import invariant from 'invariant';
+import debug from 'debug';
 import {
   DEFAULT_SCOPE,
   MODIFIERS_KEYS,
@@ -20,6 +21,8 @@ interface Handler {
   shortcut: ParsedShortcut;
   skipOther: boolean;
 }
+
+const log = debug('keybuddy');
 
 const defaultFilter = (e: KeyboardEvent): boolean =>
   e && !isEditable(e.target as HTMLElement);
@@ -43,6 +46,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     modsKeys.forEach(key => {
       modifiers[key] = e[MODIFIERS_MAP[key]];
     });
+    log('Update modifiers', modifiers);
   };
 
   const bindKey = (
@@ -139,7 +143,9 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     const { keyCode } = e;
     const key = fixedKey(keyCode);
 
+    log(`Key ${key}`);
     if (!filterFn(e)) {
+      log('Filtered', filterFn);
       return;
     }
 
@@ -153,6 +159,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
 
     if (!{}.hasOwnProperty.call(modifiers, key) && !downKeys.includes(key)) {
       downKeys.push(key);
+      log('Push down keys', downKeys);
     }
     // See if we need to ignore the keypress (filter() can can be overridden)
     // by default ignore key presses if a select, textarea, or input is focused
@@ -160,6 +167,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
 
     // abort if no potentially matching shortcuts found
     if (!(key in handlers)) {
+      log('Key not in handler');
       return;
     }
 
@@ -173,6 +181,17 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
           isEqArray(special, downKeys) && isBoolArrayToObject(mods, modifiers)
         );
       }
+    );
+
+    log(
+      'Handlers for',
+      {
+        key,
+        downKeys,
+        modifiers
+      },
+      currentHandlers,
+      handlers
     );
 
     const primaryAction: Handler | undefined = currentHandlers.find(
@@ -192,6 +211,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     const key = fixedKey(keyCode);
 
     downKeys = downKeys.filter(i => i !== key);
+    log(`Cleanup for ${key}`, downKeys);
   };
 
   const unbindScope = (deleteScope: string): void => {
