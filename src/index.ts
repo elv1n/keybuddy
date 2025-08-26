@@ -1,5 +1,5 @@
-import creator from './creator';
 import { DEFAULT_SCOPE } from './constants';
+import creator from './creator';
 
 const {
   bind,
@@ -9,7 +9,7 @@ const {
   setScope,
   unbindScope,
   unbindAll,
-  destroy
+  destroy,
 } = creator(document);
 
 export const bindKey = bind;

@@ -16,14 +16,14 @@ context('Test browser bindings', () => {
       ['alt+p', 1],
       ['shift+t', 1],
       ['command+shift+z', 1],
-      ['alt+command+shift+z', 1]
+      ['alt+command+shift+z', 1],
     ];
 
     const commandToCypress = (str: string) =>
       str
         .split('+')
-        .map(key => {
-          if ({}.hasOwnProperty.call(specials, key)) {
+        .map((key) => {
+          if (key in specials) {
             return `{${key}}`;
           }
           return key;
@@ -52,22 +52,20 @@ context('Test browser bindings', () => {
   it('should test combinations', () => {
     const mods = ['shift', 'alt', 'control', 'command'];
     const usedMods: string[] = [];
-    const combinations = mods.reduce(
-      (acc, key) => {
-        if (!usedMods.includes(key)) {
-          const modsComb = [
-            `${key}+e`,
-            `${key}+e+w`,
-            ...mods.map(modKey => `${key}+${modKey}+e`),
-            ...mods.map(modKey => `${key}+${modKey}+e+w`)
-          ];
-          usedMods.push(key);
-          return [...acc, ...modsComb];
-        }
+    const combinations = mods.reduce((acc, key) => {
+      if (!usedMods.includes(key)) {
+        const modsComb = [
+          `${key}+e`,
+          `${key}+e+w`,
+          ...mods.map((modKey) => `${key}+${modKey}+e`),
+          ...mods.map((modKey) => `${key}+${modKey}+e+w`),
+        ];
+        usedMods.push(key);
+        acc.push(...modsComb);
         return acc;
-      },
-      [] as string[]
-    );
+      }
+      return acc;
+    }, [] as string[]);
 
     cy.onReady(({ bindKey }) => {
       const testCase = (num: number): void => {
@@ -94,10 +92,10 @@ context('Test browser bindings', () => {
       ['alt+s', 'alt+command+s'],
       ['alt+s', 'alt+control+s'],
       ['command+s', 'control+command+s'],
-      ['control+s', 'control+alt+s']
+      ['control+s', 'control+alt+s'],
     ];
     const combinations = basic.concat(
-      basic.map(([arg1, arg2]) => [arg2, arg1])
+      basic.map(([arg1, arg2]) => [arg2, arg1]),
     );
 
     cy.onReady(({ bindKey }) => {
@@ -153,7 +151,7 @@ context('Test browser bindings', () => {
             combination,
             DEFAULT_SCOPE,
             stubs[index],
-            index === num ? { skipOther: true } : undefined
+            index === num ? { skipOther: true } : undefined,
           );
         });
         fireCombination(combination, () => {

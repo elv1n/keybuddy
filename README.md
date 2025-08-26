@@ -1,5 +1,10 @@
 # keybuddy ⌨️
 
+[![npm version](https://badge.fury.io/js/keybuddy.svg)](https://badge.fury.io/js/keybuddy)
+[![JSR](https://jsr.io/badges/@keybuddy/core)](https://jsr.io/@keybuddy/core)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Deno](https://img.shields.io/badge/Deno-000000?logo=deno&logoColor=white)](https://deno.land/)
+
 Define and dispatch shortcuts with easy using keybuddy.
 
 **keybuddy** provides a simple and consistent toolset for defining and dispatching keyboard shortcuts in a browser
@@ -117,4 +122,13 @@ const iframe = document.getElementById('#iframe').contentWindow;
 const myKeybuddy = creator(iframe, filterFn?) 
 
 myKeybuddy.bind('alt+b', action);
+```
+
+### Deno
+```typescript
+import key from "jsr:@keybuddy/core";
+
+key('a', e => console.log('a pressed'))
+key('shift+r', e => console.log('shift+r pressed'))
+key('⌘+shift+r, ctrl+shit+r', e => console.log('ctrl+shit+r pressed'))
 ```

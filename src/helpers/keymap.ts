@@ -1,7 +1,7 @@
-import { MODIFIERS, SPECIAL, ModifierKeys, Modifiers } from '../constants';
+import { MODIFIERS, Modifiers, SPECIAL } from '../constants';
 
 export interface ParsedShortcut {
-  mods: Array<keyof ModifierKeys>;
+  mods: number[];
   special: number[];
 }
 export interface KeyMap {
@@ -15,7 +15,7 @@ export const getKeyCode = (key: string): number =>
 const getMods = (keys: string[]): ParsedShortcut =>
   keys.reduce(
     (acc, key) => {
-      if ({}.hasOwnProperty.call(MODIFIERS, key)) {
+      if (key in MODIFIERS) {
         acc.mods.push(MODIFIERS[key as keyof Modifiers]);
       } else {
         acc.special.push(SPECIAL[key] || key.toUpperCase().charCodeAt(0));
@@ -24,8 +24,8 @@ const getMods = (keys: string[]): ParsedShortcut =>
     },
     {
       mods: [],
-      special: []
-    } as ParsedShortcut
+      special: [],
+    } as ParsedShortcut,
   );
 
 const getCombinations = (keysStr: string): string[] => {
@@ -40,14 +40,14 @@ const getCombinations = (keysStr: string): string[] => {
 
 export const getKeyMap = (keysStr: string): KeyMap[] => {
   const keymap = getCombinations(keysStr);
-  return keymap.map(keyCmd => {
+  return keymap.map((keyCmd) => {
     const keys = keyCmd.split('+');
     const key = keys[keys.length - 1];
     const code = getKeyCode(key);
 
     return {
       code,
-      shortcut: getMods(keys)
+      shortcut: getMods(keys),
     };
   });
 };

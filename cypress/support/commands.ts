@@ -25,9 +25,7 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 import * as keyBuddy from '../../src';
 
-const onReady = (
-  callback: (keybuddy: typeof keyBuddy) => void
-): Cypress.Chainable<Window> =>
+const onReady = (callback: (keybuddy: typeof keyBuddy) => void) =>
   cy.window().then(({ keybuddy }) => {
     callback(keybuddy);
   });
