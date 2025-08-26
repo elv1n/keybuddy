@@ -26,7 +26,7 @@ export const MODIFIERS: Modifiers = {
   ctrl: 17,
   control: 17,
   '⌘': 91,
-  command: 91
+  command: 91,
 };
 
 export type ModifierMap = {
@@ -45,11 +45,11 @@ export const MODIFIERS_MAP: ModifierMap = {
   [MODIFIERS.shift]: 'shiftKey',
   [MODIFIERS.alt]: 'altKey',
   [MODIFIERS.ctrl]: 'ctrlKey',
-  [MODIFIERS.command]: 'metaKey'
+  [MODIFIERS.command]: 'metaKey',
 };
 
-export const MODIFIERS_KEYS = Object.keys(MODIFIERS_MAP).map(i =>
-  Number(i)
+export const MODIFIERS_KEYS = Object.keys(MODIFIERS_MAP).map((i) =>
+  Number(i),
 ) as ModifierKeys;
 
 // Special keys
@@ -82,6 +82,6 @@ export const SPECIAL: { [key: string]: number } = {
   "'": 222,
   '[': 219,
   ']': 221,
-  '\\': 220
+  '\\': 220,
 };
 export const CAPS_LOCK = 20;

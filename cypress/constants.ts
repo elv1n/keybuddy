@@ -21,11 +21,11 @@ export const specials = [
   'control',
   'ctrl',
   'meta',
-  'shift'
+  'shift',
 ].reduce(
   (acc, key) => {
     acc[key] = true;
     return acc;
   },
-  {} as { [key: string]: boolean }
+  {} as { [key: string]: boolean },
 );

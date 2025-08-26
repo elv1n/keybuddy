@@ -1,9 +1,11 @@
 {
   "extends": "../tsconfig",
   "compilerOptions": {
-    "types": ["node","cypress"]
+    "types": ["node", "cypress", "mocha"],
+    "noEmit": true,
+    "skipLibCheck": true,
+    "rootDir": "..",
+    "isolatedModules": false
   },
-  "include": [
-    "./"
-  ]
+  "include": ["./**/*", "../src/**/*"]
 }

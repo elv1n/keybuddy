@@ -1,16 +1,36 @@
-import invariant from 'invariant';
-import debug from 'debug';
+// Lightweight replacements for debug and invariant
+const createLogger = (namespace: string) => {
+  const isDebug =
+    typeof process !== 'undefined' &&
+    process.env &&
+    process.env.NODE_ENV === 'development';
+  return isDebug ? console.debug.bind(console, `[${namespace}]`) : () => {};
+};
+
+const invariant = (condition: boolean, message: string, ...args: unknown[]) => {
+  if (
+    typeof process !== 'undefined' &&
+    process.env &&
+    process.env.NODE_ENV === 'development' &&
+    !condition
+  ) {
+    throw new Error(
+      `Invariant failed: ${message}${args.length ? ` ${JSON.stringify(args)}` : ''}`,
+    );
+  }
+};
+
 import {
+  CAPS_LOCK,
   DEFAULT_SCOPE,
   MODIFIERS_KEYS,
   MODIFIERS_MAP,
-  ModifierMap,
   ModifierKeys,
-  CAPS_LOCK
+  ModifierMap,
 } from './constants';
-import { getKeyMap, ParsedShortcut } from './helpers/keymap';
-import { isEqArray, isBoolArrayToObject } from './helpers/data';
 import { isEditable, isFirefox } from './helpers/browser';
+import { isBoolArrayToObject, isEqArray } from './helpers/data';
+import { getKeyMap, ParsedShortcut } from './helpers/keymap';
 
 type noop = (e: KeyboardEvent) => void;
 type FilterFn = (el: KeyboardEvent) => boolean;
@@ -22,7 +42,7 @@ interface Handler {
   skipOther: boolean;
 }
 
-const log = debug('keybuddy');
+const log = createLogger('keybuddy');
 
 const defaultFilter = (e: KeyboardEvent): boolean =>
   e && !isEditable(e.target as HTMLElement);
@@ -40,10 +60,10 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     acc[key] = false;
     return acc;
   }, {} as Mods);
-  const modsKeys = Object.keys(modifiers).map(i => Number(i)) as ModifierKeys;
+  const modsKeys = Object.keys(modifiers).map((i) => Number(i)) as ModifierKeys;
 
   const updateModifiers = (e: KeyboardEvent): void => {
-    modsKeys.forEach(key => {
+    modsKeys.forEach((key) => {
       modifiers[key] = e[MODIFIERS_MAP[key]];
     });
     log('Update modifiers', modifiers);
@@ -54,12 +74,12 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     scopeOrMethod: string | noop,
     methodOrNull: noop = () => {},
     {
-      skipOther
+      skipOther,
     }: {
       skipOther: boolean;
     } = {
-      skipOther: false
-    }
+      skipOther: false,
+    },
   ): void => {
     const scope: string =
       typeof scopeOrMethod === 'function' ? DEFAULT_SCOPE : scopeOrMethod;
@@ -73,11 +93,11 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
       const handler = handlers[code];
       if (process.env.NODE_ENV === 'development') {
         if (skipOther) {
-          const action = handler.find(i => i.skipOther);
+          const action = handler.find((i) => i.skipOther);
           invariant(
             !action,
             "Conflicting 'skipOther' property with action",
-            action
+            action,
           );
         }
       }
@@ -86,7 +106,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
         scope,
         method,
         shortcut,
-        skipOther
+        skipOther,
       });
     });
   };
@@ -94,7 +114,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
   const unbindKeyProcess = (
     keysStr: string,
     deleteMethod: null | noop,
-    deleteScope: string = DEFAULT_SCOPE
+    deleteScope: string = DEFAULT_SCOPE,
   ): void => {
     getKeyMap(keysStr).forEach(({ code, shortcut }) => {
       const handler = handlers[code];
@@ -106,7 +126,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
               isEqArray(methodShortcut.mods, shortcut.mods) &&
               isEqArray(methodShortcut.special, shortcut.special) &&
               (deleteMethod === null ? true : method === deleteMethod)
-            )
+            ),
         );
         if (handler.length) {
           handlers[code] = handler;
@@ -120,7 +140,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
   const unbindKey = (
     keysStr: string,
     scopeOrMethod: string | noop,
-    methodOrNull: noop = () => {}
+    methodOrNull: noop = () => {},
   ) => {
     const deleteScope: string =
       typeof scopeOrMethod === 'function' ? DEFAULT_SCOPE : scopeOrMethod;
@@ -157,7 +177,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
 
     updateModifiers(e);
 
-    if (!{}.hasOwnProperty.call(modifiers, key) && !downKeys.includes(key)) {
+    if (!(key in modifiers) && !downKeys.includes(key)) {
       downKeys.push(key);
       log('Push down keys', downKeys);
     }
@@ -180,7 +200,7 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
         return (
           isEqArray(special, downKeys) && isBoolArrayToObject(mods, modifiers)
         );
-      }
+      },
     );
 
     log(
@@ -188,14 +208,14 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
       {
         key,
         downKeys,
-        modifiers
+        modifiers,
       },
       currentHandlers,
-      handlers
+      handlers,
     );
 
     const primaryAction: Handler | undefined = currentHandlers.find(
-      action => action.skipOther
+      (action) => action.skipOther,
     );
     if (primaryAction) {
       primaryAction.method(e);
@@ -215,15 +235,15 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     if (e.key && e.key.toLowerCase() === 'meta') {
       downKeys = [];
     } else {
-      downKeys = downKeys.filter(i => i !== key);
+      downKeys = downKeys.filter((i) => i !== key);
     }
     log(`Cleanup for ${key}`, downKeys);
   };
 
   const unbindScope = (deleteScope: string): void => {
-    Object.keys(handlers).forEach(keyCode => {
+    Object.keys(handlers).forEach((keyCode) => {
       const handler = handlers[keyCode].filter(
-        ({ scope }: Handler) => scope !== deleteScope
+        ({ scope }: Handler) => scope !== deleteScope,
       );
       if (handler.length) {
         handlers[keyCode] = handler;
@@ -271,6 +291,6 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     setScope,
     unbindAll,
     getScope: () => activeScope,
-    destroy
+    destroy,
   };
 };

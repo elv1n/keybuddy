@@ -1,4 +1,4 @@
-import { Modifiers, MODIFIERS, MODIFIERS_MAP } from '../src/constants';
+import { MODIFIERS, MODIFIERS_MAP, Modifiers } from '../src/constants';
 import { getKeyCode } from '../src/helpers/keymap';
 
 interface Events {
@@ -13,25 +13,25 @@ interface Events {
 
 export const fireCombination = (
   combination: string,
-  callback: () => void
+  callback: () => void,
 ): void => {
   const events: Events = combination.split('+').reduce(
     (acc, key) => {
-      if ({}.hasOwnProperty.call(MODIFIERS, key)) {
+      if (key in MODIFIERS) {
         const modKey = MODIFIERS_MAP[MODIFIERS[key as keyof Modifiers]];
         acc.mods[modKey] = true;
       } else {
         acc.keys.push({
           key,
-          keyCode: getKeyCode(key)
+          keyCode: getKeyCode(key),
         });
       }
       return acc;
     },
     {
       mods: {},
-      keys: []
-    } as Events
+      keys: [],
+    } as Events,
   );
 
   const keyUp = () => {
@@ -39,7 +39,7 @@ export const fireCombination = (
       cy.document()
         .trigger('keyup', {
           ...key,
-          ...events.mods
+          ...events.mods,
         })
         .then(() => {
           if (index === events.keys.length - 1) {
@@ -53,7 +53,7 @@ export const fireCombination = (
     cy.document()
       .trigger('keydown', {
         ...key,
-        ...events.mods
+        ...events.mods,
       })
       .then(() => {
         if (index === events.keys.length - 1) {

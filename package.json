@@ -9,18 +9,19 @@
   },
   "repository": "https://github.com/elv1n/keybuddy",
   "scripts": {
-    "start": "cross-env NODE_ENV=development babel src --out-dir dist --extensions \".ts,.tsx\" --watch",
+    "dev": "tsx watch src/index.ts",
     "type-check": "tsc --noEmit",
-    "type-check:watch": "yarn type-check --watch",
-    "build": "rimraf ./dist && npm run build:types && npm run build:js",
+    "type-check:watch": "tsc --noEmit --watch",
+    "build": "tsup",
     "build:types": "tsc --emitDeclarationOnly",
-    "build:js": "cross-env NODE_ENV=development babel src --out-dir dist --extensions \".ts,.tsx\" --source-maps inline",
-    "preversion": "yarn build",
-    "browse": "watchify -r ./dist/index.js:keybuddy -o public/bundle.js",
-    "ws": "ws --spa index.html -d public",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
     "e2e": "cypress open",
-    "test": "yarn jest && yarn cypress run --browser chrome --headless",
+    "e2e:run": "cypress run --browser chrome --headless",
+    "test:all": "pnpm test && pnpm e2e:run",
+    "preversion": "pnpm build",
     "postversion": "node ./scripts/clone-pkg.js",
+    "lint": "biome check . --write --unsafeg",
     "release": "np --contents dist"
   },
   "dependencies": {
@@ -28,55 +29,17 @@
     "invariant": "^2.2.4"
   },
   "devDependencies": {
-    "@babel/cli": "7.7.7",
-    "@babel/core": "7.7.7",
-    "@babel/plugin-proposal-class-properties": "7.7.4",
-    "@babel/plugin-proposal-object-rest-spread": "7.7.7",
-    "@babel/preset-env": "7.7.7",
-    "@babel/preset-typescript": "7.7.7",
-    "@cypress/webpack-preprocessor": "4.1.1",
     "@types/debug": "^4.1.5",
     "@types/invariant": "2.2.31",
-    "@types/jest": "24.0.25",
-    "@types/node": "13.1.2",
-    "babel-eslint": "10.0.3",
-    "babel-loader": "^8.0.6",
-    "browserify": "^16.5.0",
-    "build-react-library": "0.3.1",
-    "clientside-require": "^4.7.2",
-    "cross-env": "6.0.3",
-    "cypress": "3.8.1",
-    "eslint-config-elv1n-react": "0.4.0",
-    "fs-extra": "8.1.0",
-    "jest": "^24.9.0",
-    "local-web-server": "^3.0.7",
-    "rimraf": "3.0.0",
-    "typescript": "3.7.4",
-    "watchify": "^3.11.1",
-    "webpack": "4.41.5"
-  },
-  "eslintConfig": {
-    "extends": [
-      "elv1n-react"
-    ],
-    "rules": {
-      "@typescript-eslint/interface-name-prefix": [
-        "error",
-        "never"
-      ],
-      "no-restricted-syntax": "off"
-    },
-    "env": {
-      "browser": true
-    },
-    "globals": {
-      "cy": true,
-      "Cypress": true
-    }
-  },
-  "nyc": {
-    "extension": [
-      ".ts"
-    ]
+    "@types/mocha": "^10.0.10",
+    "@types/node": "24.3.0",
+    "@vitest/ui": "^3.2.4",
+    "cypress": "15.0.0",
+    "jsdom": "^26.1.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.5",
+    "typescript": "5.9.2",
+    "vitest": "^3.2.4"
   }
 }
