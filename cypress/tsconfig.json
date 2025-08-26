@@ -1,11 +1,21 @@
 {
-  "extends": "../tsconfig",
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node", "cypress", "mocha"],
+    "rootDir": "../",
+    "types": ["cypress", "mocha", "node"],
     "noEmit": true,
-    "skipLibCheck": true,
-    "rootDir": "..",
-    "isolatedModules": false
+    "isolatedModules": false,
+    "allowJs": true,
+    "lib": ["ES2022", "DOM"],
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
-  "include": ["./**/*", "../src/**/*"]
+  "include": [
+    "**/*.ts",
+    "**/*.js",
+    "../src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
