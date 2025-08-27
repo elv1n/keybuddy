@@ -16,22 +16,16 @@
     "build:types": "tsc --emitDeclarationOnly",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "e2e": "cypress open",
-    "e2e:run": "cypress run --browser chrome --headless",
-    "test:all": "pnpm test && pnpm e2e:run",
+    "e2e": "cypress open --component",
+    "e2e:run": "cypress run --component",
+    "test:all": "pnpm vitest run && pnpm e2e:run",
     "preversion": "pnpm build",
     "postversion": "node ./scripts/clone-pkg.js",
-    "lint": "biome check . --write --unsafeg",
-    "release": "np --contents dist"
-  },
-  "dependencies": {
-    "debug": "^4.1.1",
-    "invariant": "^2.2.4"
+    "lint": "biome check . --write --unsafe",
+    "release": "pnpm run postversion && np --contents dist"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.5",
-    "@types/invariant": "2.2.31",
-    "@types/mocha": "^10.0.10",
+    "@cypress/vite-dev-server": "^7.0.0",
     "@types/node": "24.3.0",
     "@vitest/ui": "^3.2.4",
     "cypress": "15.0.0",
@@ -40,6 +34,7 @@
     "tsup": "^8.5.0",
     "tsx": "^4.20.5",
     "typescript": "5.9.2",
+    "vite": "^7.1.3",
     "vitest": "^3.2.4"
   }
 }

@@ -1,30 +1,26 @@
-import { MODIFIERS, MODIFIERS_MAP, Modifiers } from '../src/constants';
-import { getKeyCode } from '../src/helpers/keymap';
+import { MODIFIERS, MODS, ModifierNames } from '../src/constants';
+import { getKeyIdentifier } from '../src/helpers/keymap';
+import { KeyString } from '../src/constants';
 
 interface Events {
   mods: {
     [key: string]: boolean;
   };
-  keys: {
-    key: string;
-    keyCode: number;
-  }[];
+  keys: KeyString[];
 }
 
-export const fireCombination = (
-  combination: string,
-  callback: () => void,
-): void => {
+export const fireCombination = (combination: string): void => {
   const events: Events = combination.split('+').reduce(
     (acc, key) => {
       if (key in MODIFIERS) {
-        const modKey = MODIFIERS_MAP[MODIFIERS[key as keyof Modifiers]];
-        acc.mods[modKey] = true;
+        const modValue = MODIFIERS[key as keyof ModifierNames];
+        // Map bitwise flags to keyboard event properties
+        if (modValue & MODS.SHIFT) acc.mods.shiftKey = true;
+        if (modValue & MODS.ALT) acc.mods.altKey = true;
+        if (modValue & MODS.CTRL) acc.mods.ctrlKey = true;
+        if (modValue & MODS.META) acc.mods.metaKey = true;
       } else {
-        acc.keys.push({
-          key,
-          keyCode: getKeyCode(key),
-        });
+        acc.keys.push(getKeyIdentifier(key));
       }
       return acc;
     },
@@ -34,31 +30,57 @@ export const fireCombination = (
     } as Events,
   );
 
-  const keyUp = () => {
-    events.keys.forEach((key, index) => {
-      cy.document()
-        .trigger('keyup', {
-          ...key,
-          ...events.mods,
-        })
-        .then(() => {
-          if (index === events.keys.length - 1) {
-            callback();
-          }
-        });
-    });
-  };
+  // If no regular keys, just return
+  if (events.keys.length === 0) {
+    return;
+  }
 
-  events.keys.forEach((key, index) => {
-    cy.document()
-      .trigger('keydown', {
-        ...key,
-        ...events.mods,
-      })
-      .then(() => {
-        if (index === events.keys.length - 1) {
-          keyUp();
-        }
-      });
+  // Fire events synchronously
+  events.keys.forEach((key) => {
+    const keydownEvent = new KeyboardEvent('keydown', {
+      key,
+      code: key.startsWith('Arrow') || ['Backspace', 'Tab', 'Enter', 'Escape', 'Delete', 'Home', 'End', 'PageUp', 'PageDown'].includes(key) ? key : `Key${key.toUpperCase()}`,
+      bubbles: true,
+      cancelable: true,
+      ctrlKey: events.mods.ctrlKey || false,
+      altKey: events.mods.altKey || false,
+      shiftKey: events.mods.shiftKey || false,
+      metaKey: events.mods.metaKey || false,
+    });
+
+    // Override readonly properties for better compatibility
+    Object.defineProperties(keydownEvent, {
+      target: {
+        value: document.querySelector('[data-testid="test-container"]'),
+        writable: false,
+      },
+    });
+
+    document.dispatchEvent(keydownEvent);
+  });
+
+  // Fire all keyup events in reverse order
+  [...events.keys].reverse().forEach((key) => {
+    const keyupEvent = new KeyboardEvent('keyup', {
+      key,
+      code: key.startsWith('Arrow') || ['Backspace', 'Tab', 'Enter', 'Escape', 'Delete', 'Home', 'End', 'PageUp', 'PageDown'].includes(key) ? key : `Key${key.toUpperCase()}`,
+      bubbles: true,
+      cancelable: true,
+      ctrlKey: events.mods.ctrlKey || false,
+      altKey: events.mods.altKey || false,
+      shiftKey: events.mods.shiftKey || false,
+      metaKey: events.mods.metaKey || false,
+    });
+
+    // Override readonly properties for better compatibility
+    Object.defineProperties(keyupEvent, {
+      target: {
+        value: document.querySelector('[data-testid="test-container"]'),
+        writable: false,
+      },
+    });
+
+    // Dispatch to document directly
+    document.dispatchEvent(keyupEvent);
   });
 };

@@ -1,5 +1,5 @@
 const { join } = require('path');
-const fs = require('fs-extra');
+const fs = require('fs').promises;
 
 async function createPackageFile() {
   const root = join(__dirname, '..');
@@ -27,9 +27,8 @@ async function createPackageFile() {
     JSON.stringify(newPackageData, null, 2),
     'utf8',
   );
-  console.log(`Created package.json in ${targetPath}`);
 
-  await fs.copy(join(root, 'README.md'), join(root, 'dist/README.md'));
+  await fs.copyFile(join(root, 'README.md'), join(root, 'dist/README.md'));
 
   return newPackageData;
 }

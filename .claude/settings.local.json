@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(pnpm test:*)",
+      "Bash(npm run cy:run:*)",
+      "Bash(npm run:*)",
+      "Bash(pnpm component:run:*)",
+      "Bash(pnpm e2e:run:*)"
     ],
     "deny": [],
     "ask": []
