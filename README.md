@@ -18,9 +18,9 @@ yarn add keybuddy
 ```javascript
 import key from 'keybuddy';
 
-key('a', e => console.log('a pressed'))
-key('shift+r', e => console.log('shift+r pressed'))
-key('⌘+shift+r, ctrl+shit+r', e => console.log('ctrl+shit+r pressed'))
+key('a', e => handleKeyPress('a'))
+key('shift+r', e => handleKeyPress('shift+r'))
+key('⌘+shift+r, ctrl+shit+r', e => handleKeyPress('ctrl+shift+r'))
 
 ```
 
@@ -105,7 +105,7 @@ unsafeUnbindKey('option+e', 'myScope')
 Remove all actions and event listeners
 
 
-### creator(doc: HTMLDocument | HTMLElement, filterFn?)
+### keybuddy(doc: HTMLDocument | HTMLElement, filterFn?)
 
 Keybuddy creator can be used to replace key bindings on document
 
@@ -114,12 +114,12 @@ Keybuddy creator can be used to replace key bindings on document
 The reasons that events like onpaste, oncopy want fire keyup event for key bindings
 
 ```javascript
-import creator from 'keybuddy/creator';
+import { createKeybuddy } from 'keybuddy/keybuddy';
 const iframe = document.getElementById('#iframe').contentWindow;
 /**
 * { bind, unbind, unsafeUnbind, unbindScope, setScope, unbindAll, getScope:}
 */
-const myKeybuddy = creator(iframe, filterFn?) 
+const myKeybuddy = createKeybuddy(iframe, filterFn?) 
 
 myKeybuddy.bind('alt+b', action);
 ```
@@ -128,7 +128,7 @@ myKeybuddy.bind('alt+b', action);
 ```typescript
 import key from "jsr:@keybuddy/core";
 
-key('a', e => console.log('a pressed'))
-key('shift+r', e => console.log('shift+r pressed'))
-key('⌘+shift+r, ctrl+shit+r', e => console.log('ctrl+shit+r pressed'))
+key('a', e => handleKeyPress('a'))
+key('shift+r', e => handleKeyPress('shift+r'))
+key('⌘+shift+r, ctrl+shit+r', e => handleKeyPress('ctrl+shift+r'))
 ```

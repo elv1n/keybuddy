@@ -1,87 +1,99 @@
-import { isFirefox } from './helpers/browser';
 
 export const DEFAULT_SCOPE = 'all';
 
-type ValueOf<T> = T[keyof T];
+declare const KeyStringBrand: unique symbol;
 
-export type Modifiers = {
-  '⇧': 16;
-  shift: 16;
-  '⌥': 18;
-  alt: 18;
-  option: 18;
-  '⌃': 17;
-  ctrl: 17;
-  control: 17;
-  '⌘': 91;
-  command: 91;
-};
-export const MODIFIERS: Modifiers = {
-  '⇧': 16,
-  shift: 16,
-  '⌥': 18,
-  alt: 18,
-  option: 18,
-  '⌃': 17,
-  ctrl: 17,
-  control: 17,
-  '⌘': 91,
-  command: 91,
-};
+export type KeyString = string & { readonly [KeyStringBrand]: true };
 
-export type ModifierMap = {
-  [key in ValueOf<Modifiers>]: 'shiftKey' | 'altKey' | 'ctrlKey' | 'metaKey';
-};
-// export type ModifierMap = {
-//   16: 'shiftKey';
-//   18: 'altKey';
-//   17: 'ctrlKey';
-//   91: 'metaKey';
-// };
+// Bitwise flags for modifiers - much faster than object-based tracking
+export const MODS = {
+  SHIFT: 0b0001, // 1
+  ALT: 0b0010, // 2
+  CTRL: 0b0100, // 4
+  META: 0b1000, // 8
+} as const;
 
-export type ModifierKeys = Array<keyof ModifierMap>;
-
-export const MODIFIERS_MAP: ModifierMap = {
-  [MODIFIERS.shift]: 'shiftKey',
-  [MODIFIERS.alt]: 'altKey',
-  [MODIFIERS.ctrl]: 'ctrlKey',
-  [MODIFIERS.command]: 'metaKey',
+// Map string modifier names to bitwise flags for parsing
+export type ModifierNames = {
+  '⇧': number;
+  shift: number;
+  '⌥': number;
+  alt: number;
+  option: number;
+  '⌃': number;
+  ctrl: number;
+  control: number;
+  '⌘': number;
+  cmd: number;
+  command: number;
 };
 
-export const MODIFIERS_KEYS = Object.keys(MODIFIERS_MAP).map((i) =>
-  Number(i),
-) as ModifierKeys;
-
-// Special keys
-export const SPECIAL: { [key: string]: number } = {
-  backspace: 8,
-  tab: 9,
-  clear: 12,
-  enter: 13,
-  return: 13,
-  esc: 27,
-  escape: 27,
-  space: 32,
-  left: 37,
-  up: 38,
-  right: 39,
-  down: 40,
-  del: 46,
-  delete: 46,
-  home: 36,
-  end: 35,
-  pageup: 33,
-  pagedown: 34,
-  comma: 188,
-  '.': 190,
-  '/': 191,
-  '`': 192,
-  '-': isFirefox ? 173 : 189,
-  '=': isFirefox ? 61 : 187,
-  ';': 186,
-  "'": 222,
-  '[': 219,
-  ']': 221,
-  '\\': 220,
+export const MODIFIERS: ModifierNames = {
+  '⇧': MODS.SHIFT,
+  shift: MODS.SHIFT,
+  '⌥': MODS.ALT,
+  alt: MODS.ALT,
+  option: MODS.ALT,
+  '⌃': MODS.CTRL,
+  ctrl: MODS.CTRL,
+  control: MODS.CTRL,
+  '⌘': MODS.META,
+  cmd: MODS.META,
+  command: MODS.META,
 };
-export const CAPS_LOCK = 20;
+
+// Modern key mapping using KeyboardEvent.key values
+export const SPECIAL: { [key: string]: string } = {
+  backspace: 'Backspace',
+  tab: 'Tab',
+  clear: 'Clear',
+  enter: 'Enter',
+  return: 'Enter',
+  esc: 'Escape',
+  escape: 'Escape',
+  space: ' ',
+  left: 'ArrowLeft',
+  up: 'ArrowUp',
+  right: 'ArrowRight',
+  down: 'ArrowDown',
+  del: 'Delete',
+  delete: 'Delete',
+  home: 'Home',
+  end: 'End',
+  pageup: 'PageUp',
+  pagedown: 'PageDown',
+  comma: ',',
+  '.': '.',
+  '/': '/',
+  '`': '`',
+  '-': '-',
+  '=': '=',
+  ';': ';',
+  "'": "'",
+  '[': '[',
+  ']': ']',
+  '\\': '\\',
+  // Normalize Meta key variants
+  'Meta': 'Meta',
+  'MetaLeft': 'Meta',
+  'MetaRight': 'Meta', 
+  'OS': 'Meta',  // Some browsers use OS instead of Meta
+  'ContextMenu': 'Meta',  // Right-click context menu key sometimes acts as Meta
+  // Add identity mappings for already-normalized keys
+  'ArrowLeft': 'ArrowLeft',
+  'ArrowUp': 'ArrowUp',
+  'ArrowRight': 'ArrowRight',
+  'ArrowDown': 'ArrowDown',
+  'Backspace': 'Backspace',
+  'Tab': 'Tab',
+  'Clear': 'Clear',
+  'Enter': 'Enter',
+  'Escape': 'Escape',
+  'Delete': 'Delete',
+  'Home': 'Home',
+  'End': 'End',
+  'PageUp': 'PageUp',
+  'PageDown': 'PageDown',
+};
+
+export const CAPS_LOCK_KEY = 'CapsLock';

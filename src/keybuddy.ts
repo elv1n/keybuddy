@@ -1,36 +1,7 @@
-// Lightweight replacements for debug and invariant
-const createLogger = (namespace: string) => {
-  const isDebug =
-    typeof process !== 'undefined' &&
-    process.env &&
-    process.env.NODE_ENV === 'development';
-  return isDebug ? console.debug.bind(console, `[${namespace}]`) : () => {};
-};
-
-const invariant = (condition: boolean, message: string, ...args: unknown[]) => {
-  if (
-    typeof process !== 'undefined' &&
-    process.env &&
-    process.env.NODE_ENV === 'development' &&
-    !condition
-  ) {
-    throw new Error(
-      `Invariant failed: ${message}${args.length ? ` ${JSON.stringify(args)}` : ''}`,
-    );
-  }
-};
-
-import {
-  CAPS_LOCK,
-  DEFAULT_SCOPE,
-  MODIFIERS_KEYS,
-  MODIFIERS_MAP,
-  ModifierKeys,
-  ModifierMap,
-} from './constants';
-import { isEditable, isFirefox } from './helpers/browser';
-import { isBoolArrayToObject, isEqArray } from './helpers/data';
+import { CAPS_LOCK_KEY, DEFAULT_SCOPE, KeyString } from './constants';
+import { getKeyIdentifier, updateModifiers } from './helpers/keyboard';
 import { getKeyMap, ParsedShortcut } from './helpers/keymap';
+import { invariant, isEditable, isEqArray, isFirefox } from './helpers/utils';
 
 type noop = (e: KeyboardEvent) => void;
 type FilterFn = (el: KeyboardEvent) => boolean;
@@ -42,32 +13,28 @@ interface Handler {
   skipOther: boolean;
 }
 
-const log = createLogger('keybuddy');
-
 const defaultFilter = (e: KeyboardEvent): boolean =>
   e && !isEditable(e.target as HTMLElement);
 
-type Mods = {
-  [key in keyof ModifierMap]: boolean;
-};
+// WeakMap to track event listener references per document to prevent memory leaks
+const documentListeners = new WeakMap<
+  Document,
+  {
+    dispatch: (e: KeyboardEvent) => void;
+    cleanUp: (e: KeyboardEvent) => void;
+    reset: () => void;
+  }
+>();
 
-export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
-  let handlers: { [key: string]: Handler[] } = {};
-  let downKeys: number[] = [];
+export function createKeybuddy(
+  doc: Document,
+  filterFn: FilterFn = defaultFilter,
+) {
+  let handlers: { [key: KeyString]: Handler[] } = {};
+  const downKeys: Set<KeyString> = new Set();
   let activeScope = DEFAULT_SCOPE;
 
-  const modifiers: Mods = MODIFIERS_KEYS.reduce((acc, key) => {
-    acc[key] = false;
-    return acc;
-  }, {} as Mods);
-  const modsKeys = Object.keys(modifiers).map((i) => Number(i)) as ModifierKeys;
-
-  const updateModifiers = (e: KeyboardEvent): void => {
-    modsKeys.forEach((key) => {
-      modifiers[key] = e[MODIFIERS_MAP[key]];
-    });
-    log('Update modifiers', modifiers);
-  };
+  let modifiers = 0; // Bitwise flag for active modifiers
 
   const bindKey = (
     keysStr: string,
@@ -86,11 +53,11 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     const method: noop =
       typeof scopeOrMethod === 'function' ? scopeOrMethod : methodOrNull;
 
-    getKeyMap(keysStr).forEach(({ code, shortcut }) => {
-      if (!handlers[code]) {
-        handlers[code] = [];
+    getKeyMap(keysStr).forEach(({ key, shortcut }) => {
+      if (!handlers[key]) {
+        handlers[key] = [];
       }
-      const handler = handlers[code];
+      const handler = handlers[key];
       if (process.env.NODE_ENV === 'development') {
         if (skipOther) {
           const action = handler.find((i) => i.skipOther);
@@ -116,22 +83,22 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     deleteMethod: null | noop,
     deleteScope: string = DEFAULT_SCOPE,
   ): void => {
-    getKeyMap(keysStr).forEach(({ code, shortcut }) => {
-      const handler = handlers[code];
+    getKeyMap(keysStr).forEach(({ key, shortcut }) => {
+      const handler = handlers[key];
       if (Array.isArray(handler)) {
-        const handler = handlers[code].filter(
+        const handler = handlers[key].filter(
           ({ scope, method, shortcut: methodShortcut }: Handler) =>
             !(
               scope === deleteScope &&
-              isEqArray(methodShortcut.mods, shortcut.mods) &&
+              methodShortcut.mods === shortcut.mods &&
               isEqArray(methodShortcut.special, shortcut.special) &&
               (deleteMethod === null ? true : method === deleteMethod)
             ),
         );
         if (handler.length) {
-          handlers[code] = handler;
+          handlers[key] = handler;
         } else {
-          delete handlers[code];
+          delete handlers[key];
         }
       }
     });
@@ -152,34 +119,29 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
   const unsafeUnbindKey = (keysStr: string, scope?: string) =>
     unbindKeyProcess(keysStr, null, scope);
 
-  const fixedKey = (keyCode: number): number => {
-    if (keyCode === 93 || keyCode === 224) {
-      return 91;
-    }
-    return keyCode;
-  };
-
   const dispatch = (e: KeyboardEvent) => {
-    const { keyCode } = e;
-    const key = fixedKey(keyCode);
+    const key = getKeyIdentifier(e.key);
 
-    log(`Key ${key}`);
     if (!filterFn(e)) {
-      log('Filtered', filterFn);
       return;
     }
 
     // fix firefox behavior when caps lock fires three times onkeydown
     // and don't fire at all onkeyup (Firefox 72)
-    if (isFirefox && key === CAPS_LOCK) {
+    if (isFirefox && key === CAPS_LOCK_KEY) {
       return;
     }
 
-    updateModifiers(e);
+    modifiers = updateModifiers(e);
 
-    if (!(key in modifiers) && !downKeys.includes(key)) {
-      downKeys.push(key);
-      log('Push down keys', downKeys);
+    // Check if key is not a modifier
+    const isModifierKey =
+      key === ('SHIFT' as KeyString) ||
+      key === ('ALT' as KeyString) ||
+      key === ('CTRL' as KeyString) ||
+      key === ('META' as KeyString);
+    if (!isModifierKey && !downKeys.has(key)) {
+      downKeys.add(key);
     }
     // See if we need to ignore the keypress (filter() can can be overridden)
     // by default ignore key presses if a select, textarea, or input is focused
@@ -187,7 +149,6 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
 
     // abort if no potentially matching shortcuts found
     if (!(key in handlers)) {
-      log('Key not in handler');
       return;
     }
 
@@ -197,21 +158,8 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
           return false;
         }
 
-        return (
-          isEqArray(special, downKeys) && isBoolArrayToObject(mods, modifiers)
-        );
+        return isEqArray(special, Array.from(downKeys)) && mods === modifiers;
       },
-    );
-
-    log(
-      'Handlers for',
-      {
-        key,
-        downKeys,
-        modifiers,
-      },
-      currentHandlers,
-      handlers,
     );
 
     const primaryAction: Handler | undefined = currentHandlers.find(
@@ -227,28 +175,27 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
   };
 
   const cleanUp = (e: KeyboardEvent) => {
-    const { keyCode } = e;
-    const key = fixedKey(keyCode);
+    const key = getKeyIdentifier(e.key);
 
     // clean all for meta.
     // Main reason is ctrl+z (or any other native command not fires letter keyup on editable inputs)
     if (e.key && e.key.toLowerCase() === 'meta') {
-      downKeys = [];
+      downKeys.clear();
     } else {
-      downKeys = downKeys.filter((i) => i !== key);
+      downKeys.delete(key);
     }
-    log(`Cleanup for ${key}`, downKeys);
   };
 
   const unbindScope = (deleteScope: string): void => {
-    Object.keys(handlers).forEach((keyCode) => {
-      const handler = handlers[keyCode].filter(
+    Object.keys(handlers).forEach((key) => {
+      const keyString = key as KeyString;
+      const handler = handlers[keyString].filter(
         ({ scope }: Handler) => scope !== deleteScope,
       );
       if (handler.length) {
-        handlers[keyCode] = handler;
+        handlers[keyString] = handler;
       } else {
-        delete handlers[keyCode];
+        delete handlers[keyString];
       }
     });
   };
@@ -259,29 +206,35 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
 
   const unbindAll = (): void => {
     handlers = {};
+    downKeys.clear();
   };
 
   const reset = (): void => {
-    downKeys = [];
+    downKeys.clear();
   };
 
   const destroy = (): void => {
-    downKeys = [];
+    downKeys.clear();
     handlers = {};
     if (doc) {
-      doc.removeEventListener('keydown', dispatch);
-      doc.removeEventListener('keyup', cleanUp);
-      // Reset all on window focus
-      window.removeEventListener('focus', reset);
+      const listeners = documentListeners.get(doc);
+      if (listeners) {
+        doc.removeEventListener('keydown', listeners.dispatch);
+        doc.removeEventListener('keyup', listeners.cleanUp);
+        window.removeEventListener('focus', listeners.reset);
+        documentListeners.delete(doc);
+      }
     }
   };
 
-  if (doc) {
-    doc.addEventListener('keydown', dispatch);
-    doc.addEventListener('keyup', cleanUp);
-    // Reset all on window focus
-    window.addEventListener('focus', reset);
-  }
+  // Remove old listeners if they exist
+  destroy();
+
+  // Store and add new listeners
+  documentListeners.set(doc, { dispatch, cleanUp, reset });
+  doc.addEventListener('keydown', dispatch);
+  doc.addEventListener('keyup', cleanUp);
+  window.addEventListener('focus', reset);
 
   return {
     bind: bindKey,
@@ -293,4 +246,4 @@ export default (doc?: HTMLDocument, filterFn: FilterFn = defaultFilter) => {
     getScope: () => activeScope,
     destroy,
   };
-};
+}

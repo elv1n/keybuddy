@@ -10,12 +10,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
-  "include": [
-    "**/*.ts",
-    "**/*.js",
-    "../src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["**/*.ts", "**/*.js", "../src/**/*.ts"],
+  "exclude": ["node_modules"]
 }

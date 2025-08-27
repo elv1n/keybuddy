@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    creator: 'src/creator.ts',
+    keybuddy: 'src/keybuddy.ts',
   },
   format: ['esm', 'cjs', 'iife'],
   dts: true,

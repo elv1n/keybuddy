@@ -1,29 +1,29 @@
-import { MODIFIERS, Modifiers, SPECIAL } from '../constants';
+import { KeyString, MODIFIERS, ModifierNames, SPECIAL } from '../constants';
 
 export interface ParsedShortcut {
-  mods: number[];
-  special: number[];
+  mods: number; // Bitwise flag for modifiers
+  special: string[];
 }
 export interface KeyMap {
-  code: number;
+  key: KeyString;
   shortcut: ParsedShortcut;
 }
 
-export const getKeyCode = (key: string): number =>
-  SPECIAL[key] || key.toUpperCase().charCodeAt(0);
+export const getKeyIdentifier = (key: string): KeyString =>
+  (SPECIAL[key] || key.toUpperCase()) as KeyString;
 
 const getMods = (keys: string[]): ParsedShortcut =>
   keys.reduce(
     (acc, key) => {
       if (key in MODIFIERS) {
-        acc.mods.push(MODIFIERS[key as keyof Modifiers]);
+        acc.mods |= MODIFIERS[key as keyof ModifierNames];
       } else {
-        acc.special.push(SPECIAL[key] || key.toUpperCase().charCodeAt(0));
+        acc.special.push(SPECIAL[key] || key.toUpperCase());
       }
       return acc;
     },
     {
-      mods: [],
+      mods: 0, // Start with no modifiers
       special: [],
     } as ParsedShortcut,
   );
@@ -43,10 +43,10 @@ export const getKeyMap = (keysStr: string): KeyMap[] => {
   return keymap.map((keyCmd) => {
     const keys = keyCmd.split('+');
     const key = keys[keys.length - 1];
-    const code = getKeyCode(key);
+    const keyIdentifier = getKeyIdentifier(key);
 
     return {
-      code,
+      key: keyIdentifier,
       shortcut: getMods(keys),
     };
   });
