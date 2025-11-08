@@ -1,6 +1,5 @@
-import { MODIFIERS, MODS, ModifierNames } from '../src/constants';
+import { KeyString, MODIFIERS, MODS, ModifierNames } from '../src/constants';
 import { getKeyIdentifier } from '../src/helpers/keymap';
-import { KeyString } from '../src/constants';
 
 interface Events {
   mods: {
@@ -39,7 +38,21 @@ export const fireCombination = (combination: string): void => {
   events.keys.forEach((key) => {
     const keydownEvent = new KeyboardEvent('keydown', {
       key,
-      code: key.startsWith('Arrow') || ['Backspace', 'Tab', 'Enter', 'Escape', 'Delete', 'Home', 'End', 'PageUp', 'PageDown'].includes(key) ? key : `Key${key.toUpperCase()}`,
+      code:
+        key.startsWith('Arrow') ||
+        [
+          'Backspace',
+          'Tab',
+          'Enter',
+          'Escape',
+          'Delete',
+          'Home',
+          'End',
+          'PageUp',
+          'PageDown',
+        ].includes(key)
+          ? key
+          : `Key${key.toUpperCase()}`,
       bubbles: true,
       cancelable: true,
       ctrlKey: events.mods.ctrlKey || false,
@@ -63,7 +76,21 @@ export const fireCombination = (combination: string): void => {
   [...events.keys].reverse().forEach((key) => {
     const keyupEvent = new KeyboardEvent('keyup', {
       key,
-      code: key.startsWith('Arrow') || ['Backspace', 'Tab', 'Enter', 'Escape', 'Delete', 'Home', 'End', 'PageUp', 'PageDown'].includes(key) ? key : `Key${key.toUpperCase()}`,
+      code:
+        key.startsWith('Arrow') ||
+        [
+          'Backspace',
+          'Tab',
+          'Enter',
+          'Escape',
+          'Delete',
+          'Home',
+          'End',
+          'PageUp',
+          'PageDown',
+        ].includes(key)
+          ? key
+          : `Key${key.toUpperCase()}`,
       bubbles: true,
       cancelable: true,
       ctrlKey: events.mods.ctrlKey || false,

@@ -1,9 +1,7 @@
 # keybuddy ⌨️
 
 [![npm version](https://badge.fury.io/js/keybuddy.svg)](https://badge.fury.io/js/keybuddy)
-[![JSR](https://jsr.io/badges/@keybuddy/core)](https://jsr.io/@keybuddy/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Deno](https://img.shields.io/badge/Deno-000000?logo=deno&logoColor=white)](https://deno.land/)
 
 Define and dispatch shortcuts with easy using keybuddy.
 

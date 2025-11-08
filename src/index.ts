@@ -1,6 +1,8 @@
 import { DEFAULT_SCOPE } from './constants';
 import { createKeybuddy } from './keybuddy';
 
+export { createKeybuddy };
+
 const {
   bind,
   unbind,
@@ -17,4 +19,5 @@ export const unbindKey = unbind;
 export const unsafeUnbindKey = unsafeUnbind;
 export { setScope, unbindScope, unbindAll, getScope, destroy, DEFAULT_SCOPE };
 export type { KeyString } from './constants';
+export { MODS, SPECIAL } from './constants';
 export default bind;

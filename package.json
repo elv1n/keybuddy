@@ -8,6 +8,7 @@
     "name": "Elvin Dzhavadov"
   },
   "repository": "https://github.com/elv1n/keybuddy",
+  "packageManager": "pnpm@10.20.0",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "type-check": "tsc --noEmit",
