@@ -18,7 +18,7 @@ import key from 'keybuddy';
 
 key('a', e => handleKeyPress('a'))
 key('shift+r', e => handleKeyPress('shift+r'))
-key('⌘+shift+r, ctrl+shit+r', e => handleKeyPress('ctrl+shift+r'))
+key('⌘+shift+r, ctrl+shift+r', e => handleKeyPress('ctrl+shift+r'))
 
 ```
 
@@ -30,10 +30,17 @@ Differences:
 1. Support multiple keystrokes
 1. Custom scope not conflicting with default one
 1. Unbind requires an action (unsafeUnbindKey for backward compatibility)
-1. Creator instance to replace document with any other DOM element 
+1. Creator instance to replace document with any other DOM element
 1. More explicit API
 1. Provides new fixes and maintaining
 
+## Migrating from keymaster
+
+**Key differences:**
+- Unbinding requires the handler function: `unbindKey('ctrl+s', handler)` instead of `key.unbind('ctrl+s')`
+- Use `unsafeUnbindKey('ctrl+s')` if you need the old behavior (removes all handlers)
+- Import what you need: `import { bindKey, setScope } from 'keybuddy'` instead of global `key`
+- Modern browsers only (no IE11)
 
 ## Supported keys
 
@@ -122,11 +129,13 @@ const myKeybuddy = createKeybuddy(iframe, filterFn?)
 myKeybuddy.bind('alt+b', action);
 ```
 
+For iframe usage examples, see [cypress/component/iframe-bindings.spec.ts](cypress/component/iframe-bindings.spec.ts).
+
 ### Deno
 ```typescript
 import key from "jsr:@keybuddy/core";
 
 key('a', e => handleKeyPress('a'))
 key('shift+r', e => handleKeyPress('shift+r'))
-key('⌘+shift+r, ctrl+shit+r', e => handleKeyPress('ctrl+shift+r'))
+key('⌘+shift+r, ctrl+shift+r', e => handleKeyPress('ctrl+shift+r'))
 ```

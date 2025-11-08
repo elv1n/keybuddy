@@ -1,11 +1,9 @@
-
 export const DEFAULT_SCOPE = 'all';
 
 declare const KeyStringBrand: unique symbol;
 
 export type KeyString = string & { readonly [KeyStringBrand]: true };
 
-// Bitwise flags for modifiers - much faster than object-based tracking
 export const MODS = {
   SHIFT: 0b0001, // 1
   ALT: 0b0010, // 2
@@ -42,7 +40,6 @@ export const MODIFIERS: ModifierNames = {
   command: MODS.META,
 };
 
-// Modern key mapping using KeyboardEvent.key values
 export const SPECIAL: { [key: string]: string } = {
   backspace: 'Backspace',
   tab: 'Tab',
@@ -74,26 +71,26 @@ export const SPECIAL: { [key: string]: string } = {
   ']': ']',
   '\\': '\\',
   // Normalize Meta key variants
-  'Meta': 'Meta',
-  'MetaLeft': 'Meta',
-  'MetaRight': 'Meta', 
-  'OS': 'Meta',  // Some browsers use OS instead of Meta
-  'ContextMenu': 'Meta',  // Right-click context menu key sometimes acts as Meta
+  Meta: 'Meta',
+  MetaLeft: 'Meta',
+  MetaRight: 'Meta',
+  OS: 'Meta', // Some browsers use OS instead of Meta
+  ContextMenu: 'Meta', // Right-click context menu key sometimes acts as Meta
   // Add identity mappings for already-normalized keys
-  'ArrowLeft': 'ArrowLeft',
-  'ArrowUp': 'ArrowUp',
-  'ArrowRight': 'ArrowRight',
-  'ArrowDown': 'ArrowDown',
-  'Backspace': 'Backspace',
-  'Tab': 'Tab',
-  'Clear': 'Clear',
-  'Enter': 'Enter',
-  'Escape': 'Escape',
-  'Delete': 'Delete',
-  'Home': 'Home',
-  'End': 'End',
-  'PageUp': 'PageUp',
-  'PageDown': 'PageDown',
+  ArrowLeft: 'ArrowLeft',
+  ArrowUp: 'ArrowUp',
+  ArrowRight: 'ArrowRight',
+  ArrowDown: 'ArrowDown',
+  Backspace: 'Backspace',
+  Tab: 'Tab',
+  Clear: 'Clear',
+  Enter: 'Enter',
+  Escape: 'Escape',
+  Delete: 'Delete',
+  Home: 'Home',
+  End: 'End',
+  PageUp: 'PageUp',
+  PageDown: 'PageDown',
 };
 
 export const CAPS_LOCK_KEY = 'CapsLock';

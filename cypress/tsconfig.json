@@ -2,7 +2,7 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "../",
-    "types": ["cypress", "mocha", "node"],
+    "types": ["cypress", "node"],
     "noEmit": true,
     "isolatedModules": false,
     "allowJs": true,
@@ -10,6 +10,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
-  "include": ["**/*.ts", "**/*.js", "../src/**/*.ts"],
+  "include": ["**/*.ts", "**/*.js"],
   "exclude": ["node_modules"]
 }

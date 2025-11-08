@@ -5,3 +5,4 @@ yarn-error.log
 public/bundle.js
 cypress/videos/
 cypress/screenshots/
+.claude/

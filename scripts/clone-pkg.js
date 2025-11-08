@@ -12,13 +12,28 @@ async function createPackageFile() {
     eslintConfig,
     xo,
     np,
+    files,
     ...packageDataOther
   } = JSON.parse(packageData);
+
   const newPackageData = {
     ...packageDataOther,
     private: false,
-    main: './index.js',
-    typings: './index.d.ts',
+    main: './index.cjs',
+    module: './index.js',
+    types: './index.d.ts',
+    exports: {
+      '.': {
+        import: {
+          types: './index.d.ts',
+          default: './index.js',
+        },
+        require: {
+          types: './index.d.ts',
+          default: './index.cjs',
+        },
+      },
+    },
   };
   const targetPath = join(root, 'dist/package.json');
 

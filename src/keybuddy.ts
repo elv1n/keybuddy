@@ -1,14 +1,14 @@
-import { CAPS_LOCK_KEY, DEFAULT_SCOPE, KeyString } from './constants';
+import { CAPS_LOCK_KEY, DEFAULT_SCOPE, KeyString, MODS } from './constants';
 import { getKeyIdentifier, updateModifiers } from './helpers/keyboard';
 import { getKeyMap, ParsedShortcut } from './helpers/keymap';
 import { invariant, isEditable, isEqArray, isFirefox } from './helpers/utils';
 
-type noop = (e: KeyboardEvent) => void;
+type KeyHandler = (e: KeyboardEvent) => void;
 type FilterFn = (el: KeyboardEvent) => boolean;
 
 interface Handler {
   scope: string;
-  method: noop;
+  method: KeyHandler;
   shortcut: ParsedShortcut;
   skipOther: boolean;
 }
@@ -16,13 +16,13 @@ interface Handler {
 const defaultFilter = (e: KeyboardEvent): boolean =>
   e && !isEditable(e.target as HTMLElement);
 
-// WeakMap to track event listener references per document to prevent memory leaks
 const documentListeners = new WeakMap<
   Document,
   {
     dispatch: (e: KeyboardEvent) => void;
     cleanUp: (e: KeyboardEvent) => void;
     reset: () => void;
+    window: Window & typeof globalThis;
   }
 >();
 
@@ -34,12 +34,12 @@ export function createKeybuddy(
   const downKeys: Set<KeyString> = new Set();
   let activeScope = DEFAULT_SCOPE;
 
-  let modifiers = 0; // Bitwise flag for active modifiers
+  let modifiers = 0;
 
   const bindKey = (
     keysStr: string,
-    scopeOrMethod: string | noop,
-    methodOrNull: noop = () => {},
+    scopeOrMethod: string | KeyHandler,
+    methodOrNull: KeyHandler = () => {},
     {
       skipOther,
     }: {
@@ -50,7 +50,7 @@ export function createKeybuddy(
   ): void => {
     const scope: string =
       typeof scopeOrMethod === 'function' ? DEFAULT_SCOPE : scopeOrMethod;
-    const method: noop =
+    const method: KeyHandler =
       typeof scopeOrMethod === 'function' ? scopeOrMethod : methodOrNull;
 
     getKeyMap(keysStr).forEach(({ key, shortcut }) => {
@@ -80,7 +80,7 @@ export function createKeybuddy(
 
   const unbindKeyProcess = (
     keysStr: string,
-    deleteMethod: null | noop,
+    deleteMethod: null | KeyHandler,
     deleteScope: string = DEFAULT_SCOPE,
   ): void => {
     getKeyMap(keysStr).forEach(({ key, shortcut }) => {
@@ -106,14 +106,14 @@ export function createKeybuddy(
 
   const unbindKey = (
     keysStr: string,
-    scopeOrMethod: string | noop,
-    methodOrNull: noop = () => {},
+    scopeOrMethod: string | KeyHandler,
+    methodOrNull: KeyHandler = () => {},
   ) => {
     const deleteScope: string =
       typeof scopeOrMethod === 'function' ? DEFAULT_SCOPE : scopeOrMethod;
-    const deleteMethod: noop =
+    const deleteMethod: KeyHandler =
       typeof scopeOrMethod === 'function' ? scopeOrMethod : methodOrNull;
-    return unbindKeyProcess(keysStr, deleteMethod, deleteScope);
+    unbindKeyProcess(keysStr, deleteMethod, deleteScope);
   };
 
   const unsafeUnbindKey = (keysStr: string, scope?: string) =>
@@ -126,15 +126,12 @@ export function createKeybuddy(
       return;
     }
 
-    // fix firefox behavior when caps lock fires three times onkeydown
-    // and don't fire at all onkeyup (Firefox 72)
     if (isFirefox && key === CAPS_LOCK_KEY) {
       return;
     }
 
     modifiers = updateModifiers(e);
 
-    // Check if key is not a modifier
     const isModifierKey =
       key === ('SHIFT' as KeyString) ||
       key === ('ALT' as KeyString) ||
@@ -143,11 +140,7 @@ export function createKeybuddy(
     if (!isModifierKey && !downKeys.has(key)) {
       downKeys.add(key);
     }
-    // See if we need to ignore the keypress (filter() can can be overridden)
-    // by default ignore key presses if a select, textarea, or input is focused
-    // if (!assignKey.filter.call(this, event)) return;
 
-    // abort if no potentially matching shortcuts found
     if (!(key in handlers)) {
       return;
     }
@@ -177,8 +170,6 @@ export function createKeybuddy(
   const cleanUp = (e: KeyboardEvent) => {
     const key = getKeyIdentifier(e.key);
 
-    // clean all for meta.
-    // Main reason is ctrl+z (or any other native command not fires letter keyup on editable inputs)
     if (e.key && e.key.toLowerCase() === 'meta') {
       downKeys.clear();
     } else {
@@ -221,20 +212,88 @@ export function createKeybuddy(
       if (listeners) {
         doc.removeEventListener('keydown', listeners.dispatch);
         doc.removeEventListener('keyup', listeners.cleanUp);
-        window.removeEventListener('focus', listeners.reset);
+        listeners.window.removeEventListener('focus', listeners.reset);
         documentListeners.delete(doc);
       }
     }
   };
 
-  // Remove old listeners if they exist
   destroy();
 
-  // Store and add new listeners
-  documentListeners.set(doc, { dispatch, cleanUp, reset });
+  const win = (doc.defaultView || window) as Window & typeof globalThis;
+
+  documentListeners.set(doc, { dispatch, cleanUp, reset, window: win });
   doc.addEventListener('keydown', dispatch);
   doc.addEventListener('keyup', cleanUp);
-  window.addEventListener('focus', reset);
+  win.addEventListener('focus', reset);
+
+  const getScope = () => activeScope;
+
+  const isBound = (keysStr: string, options?: { scope?: string }): boolean => {
+    const scope = options?.scope || activeScope;
+    const keyMaps = getKeyMap(keysStr);
+
+    return keyMaps.some(({ key, shortcut }) => {
+      const keyHandlers = handlers[key];
+      if (!keyHandlers) return false;
+
+      return keyHandlers.some(
+        (h) =>
+          h.scope === scope &&
+          h.shortcut.mods === shortcut.mods &&
+          isEqArray(h.shortcut.special, shortcut.special),
+      );
+    });
+  };
+
+  const getBoundKeys = (options?: { scope?: string }): string[] => {
+    const scope = options?.scope || activeScope;
+    const keys = new Set<string>();
+
+    Object.values(handlers).forEach((handlerList) => {
+      handlerList.forEach((handler) => {
+        if (handler.scope === scope) {
+          const modParts: string[] = [];
+          if (handler.shortcut.mods & MODS.CTRL) modParts.push('ctrl');
+          if (handler.shortcut.mods & MODS.ALT) modParts.push('alt');
+          if (handler.shortcut.mods & MODS.SHIFT) modParts.push('shift');
+          if (handler.shortcut.mods & MODS.META) modParts.push('cmd');
+
+          const keyPart = handler.shortcut.special.join('+') || '';
+          const fullKey = [...modParts, keyPart].filter(Boolean).join('+');
+          if (fullKey) keys.add(fullKey);
+        }
+      });
+    });
+
+    return Array.from(keys);
+  };
+
+  const getHandlers = (
+    keysStr: string,
+    options?: { scope?: string },
+  ): KeyHandler[] => {
+    const scope = options?.scope || activeScope;
+    const keyMaps = getKeyMap(keysStr);
+    const result: KeyHandler[] = [];
+
+    keyMaps.forEach(({ key, shortcut }) => {
+      const keyHandlers = handlers[key];
+      if (!keyHandlers) return;
+
+      keyHandlers.forEach((h) => {
+        if (
+          h.scope === scope &&
+          h.shortcut.mods === shortcut.mods &&
+          isEqArray(h.shortcut.special, shortcut.special)
+        ) {
+          result.push(h.method);
+        }
+      });
+    });
+
+    return result;
+  };
 
   return {
     bind: bindKey,
@@ -243,7 +302,10 @@ export function createKeybuddy(
     unbindScope,
     setScope,
     unbindAll,
-    getScope: () => activeScope,
+    getScope,
     destroy,
+    isBound,
+    getBoundKeys,
+    getHandlers,
   };
 }

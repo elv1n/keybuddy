@@ -1,4 +1,5 @@
 import { KeyString, MODIFIERS, ModifierNames, SPECIAL } from '../constants';
+import { getKeyIdentifier } from './keyboard';
 
 export interface ParsedShortcut {
   mods: number; // Bitwise flag for modifiers
@@ -8,9 +9,6 @@ export interface KeyMap {
   key: KeyString;
   shortcut: ParsedShortcut;
 }
-
-export const getKeyIdentifier = (key: string): KeyString =>
-  (SPECIAL[key] || key.toUpperCase()) as KeyString;
 
 const getMods = (keys: string[]): ParsedShortcut =>
   keys.reduce(

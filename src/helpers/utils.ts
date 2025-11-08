@@ -15,7 +15,8 @@ export const invariant = (
   }
 };
 
-export const isFirefox = navigator.userAgent.includes('Firefox');
+export const isFirefox =
+  typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox');
 
 export const isEditable = (el: HTMLElement): boolean =>
   el.isContentEditable ||

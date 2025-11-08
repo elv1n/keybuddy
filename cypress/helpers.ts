@@ -1,5 +1,5 @@
 import { KeyString, MODIFIERS, MODS, ModifierNames } from '../src/constants';
-import { getKeyIdentifier } from '../src/helpers/keymap';
+import { getKeyIdentifier } from '../src/helpers/keyboard';
 
 interface Events {
   mods: {
@@ -8,7 +8,10 @@ interface Events {
   keys: KeyString[];
 }
 
-export const fireCombination = (combination: string): void => {
+export const fireCombination = (
+  combination: string,
+  targetDoc: Document | HTMLElement = document,
+): void => {
   const events: Events = combination.split('+').reduce(
     (acc, key) => {
       if (key in MODIFIERS) {
@@ -62,14 +65,24 @@ export const fireCombination = (combination: string): void => {
     });
 
     // Override readonly properties for better compatibility
+    let targetValue: HTMLElement | null = targetDoc.querySelector(
+      '[data-testid="test-container"]',
+    );
+    if (!targetValue) {
+      if (targetDoc instanceof Document) {
+        targetValue = targetDoc.body;
+      } else {
+        targetValue = targetDoc;
+      }
+    }
     Object.defineProperties(keydownEvent, {
       target: {
-        value: document.querySelector('[data-testid="test-container"]'),
+        value: targetValue,
         writable: false,
       },
     });
 
-    document.dispatchEvent(keydownEvent);
+    targetDoc.dispatchEvent(keydownEvent);
   });
 
   // Fire all keyup events in reverse order
@@ -99,15 +112,25 @@ export const fireCombination = (combination: string): void => {
       metaKey: events.mods.metaKey || false,
     });
 
+    let targetValue: HTMLElement | null = targetDoc.querySelector(
+      '[data-testid="test-container"]',
+    );
+    if (!targetValue) {
+      if (targetDoc instanceof Document) {
+        targetValue = targetDoc.body;
+      } else {
+        targetValue = targetDoc;
+      }
+    }
     // Override readonly properties for better compatibility
     Object.defineProperties(keyupEvent, {
       target: {
-        value: document.querySelector('[data-testid="test-container"]'),
+        value: targetValue,
         writable: false,
       },
     });
 
     // Dispatch to document directly
-    document.dispatchEvent(keyupEvent);
+    targetDoc.dispatchEvent(keyupEvent);
   });
 };

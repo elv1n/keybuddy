@@ -1,5 +1,4 @@
 import * as keyBuddy from '../../src';
-import { specials } from '../constants';
 import { fireCombination } from '../helpers';
 
 context('Test browser bindings', () => {
@@ -53,7 +52,6 @@ context('Test browser bindings', () => {
       key: 'P',
       altKey: true,
       bubbles: true,
-      target: document.body,
     });
 
     document.dispatchEvent(event);
