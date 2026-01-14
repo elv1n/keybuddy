@@ -2,19 +2,9 @@
   "name": "keybuddy",
   "version": "0.8.0",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "files": [
-    "dist"
-  ],
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "sideEffects": false,
   "keywords": [
     "keyboard",
@@ -55,14 +45,14 @@
     "test:all": "pnpm vitest run && pnpm e2e:run",
     "preversion": "pnpm build",
     "postversion": "node ./scripts/clone-pkg.js",
-    "lint": "biome check . --write --unsafe",
+    "lint": "biome check . --write",
     "release": "pnpm run postversion && np --contents dist"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.4",
+    "@biomejs/biome": "^2.3.11",
     "@cypress/vite-dev-server": "^7.0.1",
     "@types/node": "24.10.0",
-    "cypress": "15.6.0",
+    "cypress": "15.9.0",
     "jsdom": "^27.1.0",
     "np": "^10.2.0",
     "tsup": "^8.5.0",

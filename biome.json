@@ -1,6 +1,12 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.4/schema.json",
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "$schema": "https://biomejs.dev/schemas/2.3.11/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "formatter": {
     "indentStyle": "space"
   },
@@ -26,6 +32,9 @@
       },
       "correctness": {
         "noEmptyPattern": "off"
+      },
+      "suspicious": {
+        "noConsole": "error"
       }
     }
   },

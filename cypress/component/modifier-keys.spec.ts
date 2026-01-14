@@ -16,8 +16,20 @@ describe('Modifier key detection', () => {
     kb.bind('cmd+a', handler);
 
     cy.document().then((doc) => {
-      doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Meta', metaKey: true, bubbles: true }));
-      doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', metaKey: true, bubbles: true }));
+      doc.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Meta',
+          metaKey: true,
+          bubbles: true,
+        }),
+      );
+      doc.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'a',
+          metaKey: true,
+          bubbles: true,
+        }),
+      );
     });
 
     cy.get('@handler').should('have.been.calledOnce');

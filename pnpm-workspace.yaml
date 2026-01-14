@@ -1,2 +1,11 @@
 ignoredBuiltDependencies:
   - '@biomejs/biome'
+
+onlyBuiltDependencies:
+  - c
+  - cypress
+  - e
+  - p
+  - r
+  - s
+  - y

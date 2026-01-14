@@ -1,5 +1,9 @@
 import { CAPS_LOCK_KEY, DEFAULT_SCOPE, KeyString, MODS } from './constants';
-import { getKeyIdentifier, isModifierKey, updateModifiers } from './helpers/keyboard';
+import {
+  getKeyIdentifier,
+  isModifierKey,
+  updateModifiers,
+} from './helpers/keyboard';
 import { getKeyMap, ParsedShortcut } from './helpers/keymap';
 import { invariant, isEditable, isEqArray, isFirefox } from './helpers/utils';
 
@@ -155,7 +159,6 @@ export function createKeybuddy(
       (action) => action.skipOther,
     );
 
-    console.log('has it?', primaryAction, currentHandlers);
     if (primaryAction) {
       primaryAction.method(e);
     } else {
