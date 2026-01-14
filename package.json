@@ -45,7 +45,7 @@
   "packageManager": "pnpm@10.27.0",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc --noEmit && tsc --noEmit -p cypress/tsconfig.json",
     "type-check:watch": "tsc --noEmit --watch",
     "build": "tsup",
     "build:types": "tsc --emitDeclarationOnly",

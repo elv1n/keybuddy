@@ -1,15 +1,14 @@
 {
-  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "../",
-    "types": ["cypress", "node"],
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "noEmit": true,
-    "isolatedModules": false,
-    "allowJs": true,
-    "lib": ["ES2022", "DOM"],
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "types": ["cypress", "node"]
   },
-  "include": ["**/*.ts", "**/*.js"],
-  "exclude": ["node_modules"]
+  "include": ["./**/*.ts", "../src/**/*.ts"]
 }
