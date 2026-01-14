@@ -16,7 +16,7 @@ const getMods = (keys: string[]): ParsedShortcut =>
       if (key in MODIFIERS) {
         acc.mods |= MODIFIERS[key as keyof ModifierNames];
       } else {
-        acc.special.push(SPECIAL[key] || key.toUpperCase());
+        acc.special.push((SPECIAL[key] || key).toLowerCase());
       }
       return acc;
     },

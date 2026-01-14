@@ -1,5 +1,5 @@
 import { CAPS_LOCK_KEY, DEFAULT_SCOPE, KeyString, MODS } from './constants';
-import { getKeyIdentifier, updateModifiers } from './helpers/keyboard';
+import { getKeyIdentifier, isModifierKey, updateModifiers } from './helpers/keyboard';
 import { getKeyMap, ParsedShortcut } from './helpers/keymap';
 import { invariant, isEditable, isEqArray, isFirefox } from './helpers/utils';
 
@@ -132,12 +132,8 @@ export function createKeybuddy(
 
     modifiers = updateModifiers(e);
 
-    const isModifierKey =
-      key === ('SHIFT' as KeyString) ||
-      key === ('ALT' as KeyString) ||
-      key === ('CTRL' as KeyString) ||
-      key === ('META' as KeyString);
-    if (!isModifierKey && !downKeys.has(key)) {
+    const isModifier = isModifierKey(key);
+    if (!isModifier && !downKeys.has(key)) {
       downKeys.add(key);
     }
 
@@ -158,6 +154,8 @@ export function createKeybuddy(
     const primaryAction: Handler | undefined = currentHandlers.find(
       (action) => action.skipOther,
     );
+
+    console.log('has it?', primaryAction, currentHandlers);
     if (primaryAction) {
       primaryAction.method(e);
     } else {
@@ -217,8 +215,6 @@ export function createKeybuddy(
       }
     }
   };
-
-  destroy();
 
   const win = (doc.defaultView || window) as Window & typeof globalThis;
 
