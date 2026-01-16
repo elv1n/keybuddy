@@ -1,13 +1,13 @@
 import * as keyBuddy from '../../src';
 import { fireCombination } from '../helpers';
 
-describe.skip('Known Behaviors - Document Expected Functionality', () => {
+describe('Known Behaviors - Document Expected Functionality', () => {
   beforeEach(() => {
     cy.mount('<div data-testid="test-container">Test Component</div>');
   });
 
   afterEach(() => {
-    keyBuddy.destroy();
+    keyBuddy.unbindAll();
   });
 
   it('should clear all downKeys when meta key is released', () => {

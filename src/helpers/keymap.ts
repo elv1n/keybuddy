@@ -2,12 +2,14 @@ import { KeyString, MODIFIERS, ModifierNames, SPECIAL } from '../constants';
 import { getKeyIdentifier } from './keyboard';
 
 export interface ParsedShortcut {
-  mods: number; // Bitwise flag for modifiers
+  mods: number;
   special: string[];
 }
+
 export interface KeyMap {
   key: KeyString;
   shortcut: ParsedShortcut;
+  sequence?: KeyMap[];
 }
 
 const getMods = (keys: string[]): ParsedShortcut =>
@@ -21,31 +23,30 @@ const getMods = (keys: string[]): ParsedShortcut =>
       return acc;
     },
     {
-      mods: 0, // Start with no modifiers
+      mods: 0,
       special: [],
     } as ParsedShortcut,
   );
 
-const getCombinations = (keysStr: string): string[] => {
-  const cleanKeys = keysStr.replace(/\s/g, '');
-  const keys = cleanKeys.split(',');
-  if (keys[keys.length - 1] === '') {
-    keys[keys.length - 2] += ',';
+function parseCombo(combo: string): KeyMap {
+  const keys = combo.split('+');
+  const key = keys[keys.length - 1];
+  const keyIdentifier = getKeyIdentifier(key);
+
+  return {
+    key: keyIdentifier,
+    shortcut: getMods(keys),
+  };
+}
+
+export const getKeyMap = (keysStr: string): KeyMap => {
+  const parts = keysStr.trim().split(/\s+/);
+
+  if (parts.length === 1) {
+    return parseCombo(parts[0]);
   }
 
-  return keys;
-};
-
-export const getKeyMap = (keysStr: string): KeyMap[] => {
-  const keymap = getCombinations(keysStr);
-  return keymap.map((keyCmd) => {
-    const keys = keyCmd.split('+');
-    const key = keys[keys.length - 1];
-    const keyIdentifier = getKeyIdentifier(key);
-
-    return {
-      key: keyIdentifier,
-      shortcut: getMods(keys),
-    };
-  });
+  const first = parseCombo(parts[0]);
+  first.sequence = parts.slice(1).map(parseCombo);
+  return first;
 };

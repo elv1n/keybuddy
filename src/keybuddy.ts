@@ -4,7 +4,7 @@ import {
   isModifierKey,
   updateModifiers,
 } from './helpers/keyboard';
-import { getKeyMap, ParsedShortcut } from './helpers/keymap';
+import { getKeyMap, KeyMap, ParsedShortcut } from './helpers/keymap';
 import { invariant, isEditable, isEqArray, isFirefox } from './helpers/utils';
 
 type KeyHandler = (e: KeyboardEvent) => void;
@@ -14,8 +14,17 @@ interface Handler {
   scope: string;
   method: KeyHandler;
   shortcut: ParsedShortcut;
+  sequence?: KeyMap[];
   skipOther: boolean;
 }
+
+interface SequenceState {
+  handler: Handler;
+  nextIndex: number;
+  timestamp: number;
+}
+
+const SEQUENCE_TIMEOUT = 1000;
 
 const defaultFilter = (e: KeyboardEvent): boolean =>
   e && !isEditable(e.target as HTMLElement);
@@ -37,6 +46,7 @@ export function createKeybuddy(
   let handlers: { [key: KeyString]: Handler[] } = {};
   const downKeys: Set<KeyString> = new Set();
   let activeScope = DEFAULT_SCOPE;
+  let activeSequences: SequenceState[] = [];
 
   let modifiers = 0;
 
@@ -57,28 +67,28 @@ export function createKeybuddy(
     const method: KeyHandler =
       typeof scopeOrMethod === 'function' ? scopeOrMethod : methodOrNull;
 
-    getKeyMap(keysStr).forEach(({ key, shortcut }) => {
-      if (!handlers[key]) {
-        handlers[key] = [];
+    const { key, shortcut, sequence } = getKeyMap(keysStr);
+    if (!handlers[key]) {
+      handlers[key] = [];
+    }
+    const handlerList = handlers[key];
+    if (process.env.NODE_ENV === 'development') {
+      if (skipOther) {
+        const action = handlerList.find((i) => i.skipOther);
+        invariant(
+          !action,
+          "Conflicting 'skipOther' property with action",
+          action,
+        );
       }
-      const handler = handlers[key];
-      if (process.env.NODE_ENV === 'development') {
-        if (skipOther) {
-          const action = handler.find((i) => i.skipOther);
-          invariant(
-            !action,
-            "Conflicting 'skipOther' property with action",
-            action,
-          );
-        }
-      }
+    }
 
-      handler.push({
-        scope,
-        method,
-        shortcut,
-        skipOther,
-      });
+    handlerList.push({
+      scope,
+      method,
+      shortcut,
+      sequence,
+      skipOther,
     });
   };
 
@@ -87,25 +97,24 @@ export function createKeybuddy(
     deleteMethod: null | KeyHandler,
     deleteScope: string = DEFAULT_SCOPE,
   ): void => {
-    getKeyMap(keysStr).forEach(({ key, shortcut }) => {
-      const handler = handlers[key];
-      if (Array.isArray(handler)) {
-        const handler = handlers[key].filter(
-          ({ scope, method, shortcut: methodShortcut }: Handler) =>
-            !(
-              scope === deleteScope &&
-              methodShortcut.mods === shortcut.mods &&
-              isEqArray(methodShortcut.special, shortcut.special) &&
-              (deleteMethod === null ? true : method === deleteMethod)
-            ),
-        );
-        if (handler.length) {
-          handlers[key] = handler;
-        } else {
-          delete handlers[key];
-        }
+    const { key, shortcut } = getKeyMap(keysStr);
+    const keyHandlers = handlers[key];
+    if (Array.isArray(keyHandlers)) {
+      const filtered = keyHandlers.filter(
+        ({ scope, method, shortcut: methodShortcut }: Handler) =>
+          !(
+            scope === deleteScope &&
+            methodShortcut.mods === shortcut.mods &&
+            isEqArray(methodShortcut.special, shortcut.special) &&
+            (deleteMethod === null ? true : method === deleteMethod)
+          ),
+      );
+      if (filtered.length) {
+        handlers[key] = filtered;
+      } else {
+        delete handlers[key];
       }
-    });
+    }
   };
 
   const unbindKey = (
@@ -122,6 +131,19 @@ export function createKeybuddy(
 
   const unsafeUnbindKey = (keysStr: string, scope?: string) =>
     unbindKeyProcess(keysStr, null, scope);
+
+  const matchesCombo = (
+    combo: KeyMap,
+    currentKey: KeyString,
+    currentMods: number,
+    currentDownKeys: Set<KeyString>,
+  ): boolean => {
+    return (
+      combo.key === currentKey &&
+      combo.shortcut.mods === currentMods &&
+      isEqArray(combo.shortcut.special, Array.from(currentDownKeys))
+    );
+  };
 
   const dispatch = (e: KeyboardEvent) => {
     const key = getKeyIdentifier(e.key);
@@ -141,6 +163,33 @@ export function createKeybuddy(
       downKeys.add(key);
     }
 
+    const now = Date.now();
+    let sequenceMatched = false;
+
+    activeSequences = activeSequences.filter((seq) => {
+      if (now - seq.timestamp > SEQUENCE_TIMEOUT) {
+        return false;
+      }
+
+      const nextCombo = seq.handler.sequence?.[seq.nextIndex];
+      if (!nextCombo) {
+        return false;
+      }
+
+      if (matchesCombo(nextCombo, key, modifiers, downKeys)) {
+        sequenceMatched = true;
+        if (seq.nextIndex === (seq.handler.sequence?.length ?? 0) - 1) {
+          seq.handler.method(e);
+          return false;
+        }
+        seq.nextIndex++;
+        seq.timestamp = now;
+        return true;
+      }
+
+      return false;
+    });
+
     if (!(key in handlers)) {
       return;
     }
@@ -155,14 +204,35 @@ export function createKeybuddy(
       },
     );
 
-    const primaryAction: Handler | undefined = currentHandlers.find(
+    for (const handler of currentHandlers) {
+      if (handler.sequence?.length) {
+        activeSequences.push({
+          handler,
+          nextIndex: 0,
+          timestamp: now,
+        });
+        sequenceMatched = true;
+      }
+    }
+
+    // Don't fire standalone handlers if any sequence activity occurred
+    // (sequence started, advanced, or completed)
+    if (sequenceMatched) {
+      return;
+    }
+
+    const nonSequenceHandlers = currentHandlers.filter(
+      (h) => !h.sequence?.length,
+    );
+
+    const primaryAction = nonSequenceHandlers.find(
       (action) => action.skipOther,
     );
 
     if (primaryAction) {
       primaryAction.method(e);
     } else {
-      currentHandlers.forEach(({ method }) => {
+      nonSequenceHandlers.forEach(({ method }) => {
         method(e);
       });
     }
@@ -199,15 +269,18 @@ export function createKeybuddy(
   const unbindAll = (): void => {
     handlers = {};
     downKeys.clear();
+    activeSequences = [];
   };
 
   const reset = (): void => {
     downKeys.clear();
+    activeSequences = [];
   };
 
   const destroy = (): void => {
     downKeys.clear();
     handlers = {};
+    activeSequences = [];
     if (doc) {
       const listeners = documentListeners.get(doc);
       if (listeners) {
@@ -230,19 +303,16 @@ export function createKeybuddy(
 
   const isBound = (keysStr: string, options?: { scope?: string }): boolean => {
     const scope = options?.scope || activeScope;
-    const keyMaps = getKeyMap(keysStr);
+    const { key, shortcut } = getKeyMap(keysStr);
+    const keyHandlers = handlers[key];
+    if (!keyHandlers) return false;
 
-    return keyMaps.some(({ key, shortcut }) => {
-      const keyHandlers = handlers[key];
-      if (!keyHandlers) return false;
-
-      return keyHandlers.some(
-        (h) =>
-          h.scope === scope &&
-          h.shortcut.mods === shortcut.mods &&
-          isEqArray(h.shortcut.special, shortcut.special),
-      );
-    });
+    return keyHandlers.some(
+      (h) =>
+        h.scope === scope &&
+        h.shortcut.mods === shortcut.mods &&
+        isEqArray(h.shortcut.special, shortcut.special),
+    );
   };
 
   const getBoundKeys = (options?: { scope?: string }): string[] => {
@@ -273,25 +343,18 @@ export function createKeybuddy(
     options?: { scope?: string },
   ): KeyHandler[] => {
     const scope = options?.scope || activeScope;
-    const keyMaps = getKeyMap(keysStr);
-    const result: KeyHandler[] = [];
+    const { key, shortcut } = getKeyMap(keysStr);
+    const keyHandlers = handlers[key];
+    if (!keyHandlers) return [];
 
-    keyMaps.forEach(({ key, shortcut }) => {
-      const keyHandlers = handlers[key];
-      if (!keyHandlers) return;
-
-      keyHandlers.forEach((h) => {
-        if (
+    return keyHandlers
+      .filter(
+        (h) =>
           h.scope === scope &&
           h.shortcut.mods === shortcut.mods &&
-          isEqArray(h.shortcut.special, shortcut.special)
-        ) {
-          result.push(h.method);
-        }
-      });
-    });
-
-    return result;
+          isEqArray(h.shortcut.special, shortcut.special),
+      )
+      .map((h) => h.method);
   };
 
   return {

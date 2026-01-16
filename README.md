@@ -3,139 +3,206 @@
 [![npm version](https://badge.fury.io/js/keybuddy.svg)](https://badge.fury.io/js/keybuddy)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-Define and dispatch shortcuts with easy using keybuddy.
+Define and dispatch keyboard shortcuts with keybuddy.
 
-**keybuddy** provides a simple and consistent toolset for defining and dispatching keyboard shortcuts in a browser
+**keybuddy** provides a simple and consistent toolset for defining and dispatching keyboard shortcuts in a browser environment.
 
- ## Usage
- 
- ```bash
-yarn add keybuddy
+## Usage
+
+```bash
+pnpm add keybuddy
 ```
 
 ```javascript
-import key from 'keybuddy';
+import { bindKey } from 'keybuddy';
 
-key('a', e => handleKeyPress('a'))
-key('shift+r', e => handleKeyPress('shift+r'))
-key('⌘+shift+r, ctrl+shift+r', e => handleKeyPress('ctrl+shift+r'))
-
+bindKey('a', handleKeyPress);
+bindKey('shift+r', handleKeyPress);
+bindKey('command+shift+r', handleKeyPress);
+// sequences
+bindKey('cmd+e k', handleKeyPress);
+bindKey('g i', handleKeyPress);
 ```
 
-Based on [keymaster](https://github.com/madrobby/keymaster)
+Initially based on [keymaster](https://github.com/madrobby/keymaster)
 
 Differences:
 
-1. Completely rewritten in modern js using TS
-1. Support multiple keystrokes
-1. Custom scope not conflicting with default one
-1. Unbind requires an action (unsafeUnbindKey for backward compatibility)
-1. Creator instance to replace document with any other DOM element
-1. More explicit API
-1. Provides new fixes and maintaining
+1. Written modern JS using TypeScript
+2. Custom scope not conflicting with default one
+3. Unbind requires an action (unsafeUnbindKey for backward compatibility)
+4. Creator instance to replace document with any other DOM element
+5. More explicit API
+6. Provides new fixes and maintaining
+7. Added sequence support
+8. Removed support for multiple shortcuts in a single string
 
 ## Migrating from keymaster
 
 **Key differences:**
 - Unbinding requires the handler function: `unbindKey('ctrl+s', handler)` instead of `key.unbind('ctrl+s')`
 - Use `unsafeUnbindKey('ctrl+s')` if you need the old behavior (removes all handlers)
-- Import what you need: `import { bindKey, setScope } from 'keybuddy'` instead of global `key`
+- Import what you need: `import { bindKey, setScope } from 'keybuddy'`
 - Modern browsers only (no IE11)
+- Split multiple key bindings into separate calls `'cmd+r, ctrl+r'` into `cmd+r`, `ctrl+r`
 
 ## Supported keys
 
 Keybuddy understands the following modifiers:
 
-`⇧` ,`shift` ,`⌥` ,`alt` ,`option` ,`⌃` ,`ctrl` ,`control` ,`⌘` ,`command` 
+`shift`, `alt`, `option`, `ctrl`, `control`, `command`, `cmd`
+
+Symbol variants: `⇧`, `⌥`, `⌃`, `⌘`
 
 The following special keys can be used for shortcuts:
 
-`backspace` ,`tab` ,`clear` ,`enter` ,`return` ,`esc` ,`escape` ,`space` ,`left` ,`up` ,`right` ,`down` ,`del` ,`delete` ,`home` ,`end` ,`pageup` ,`pagedown` ,`comma` ,`.` ,`/` ,``` ,`-` ,`=` ,`;` ,`'` ,`[` ,`]` ,`\`
+`backspace`, `tab`, `clear`, `enter`, `return`, `esc`, `escape`, `space`, `left`, `up`, `right`, `down`, `del`, `delete`, `home`, `end`, `pageup`, `pagedown`, `comma`, `.`, `/`, `` ` ``, `-`, `=`, `;`, `'`, `[`, `]`, `\`
+
+## Sequences
+
+Keybuddy supports sequence shortcuts - multiple key combinations pressed in order:
+
+```javascript
+// Press 'g', release, then press 'i'
+bindKey('g i', () => goToInbox());
+
+// Press Cmd+K, release, then press Cmd+C
+bindKey('cmd+k cmd+c', () => copyCode());
+
+// Press Cmd+Z, release, then press 'y'
+bindKey('cmd+z y', () => confirmUndo());
+```
+
+**Syntax:**
+- `'cmd+z+y'` = chord (all keys held simultaneously)
+- `'cmd+z y'` = sequence (press Cmd+Z, release, then press Y)
+
+Sequences timeout after 1 second.
 
 ## API
 
-#### bindKey(keysStr: string, scopeOrMethod: string | () => {}, actionOrNothing?, {skipOther: boolean}?)
+### bindKey(keysStr, scopeOrMethod, actionOrNothing?, options?)
+
+Bind a keyboard shortcut to a handler.
 
 ```javascript
-import key, { DEFAULT_SCOPE } from 'keybuddy';
-// import { bindKey } from 'keybuddy';
+import { bindKey, DEFAULT_SCOPE } from 'keybuddy';
 
 bindKey('option+e', action);
 bindKey('option+e', 'myScope', action);
-// use skipOther option to make primary action on same key bindings
 bindKey('option+e', DEFAULT_SCOPE, action, { skipOther: true });
-bindKey('option+e', 'myScope', action, { skipOther: true });
 ```
 
-#### unbindKey(keysStr: string, scopeOrMethod: string | () => {}, actionOrNothing?)
+**Options:**
+- `skipOther: boolean` - If true, this handler takes priority and other handlers for the same shortcut won't fire
 
-**Action is required for unbind**
+### unbindKey(keysStr, scopeOrMethod, actionOrNothing?)
+
+Unbind a keyboard shortcut. **Action is required.**
 
 ```javascript
 import { unbindKey } from 'keybuddy';
 
-unbindKey('option+e', action)
-bindKey('option+e', 'myScope', action)
+unbindKey('option+e', action);
+unbindKey('option+e', 'myScope', action);
 ```
 
-#### getScope()
+### unsafeUnbindKey(keysStr, scope?)
 
-Returns current scope
-
-#### setScope()
-
-Change scope
-
-#### unbindScope()
-
-Remove all scope actions
-
-#### unbindAll()
-
-Remove all actions
-
-#### unsafeUnbindKey(keysStr: string, scope?: string)
-
-Remove all actions for a key
+Remove all handlers for a key (use with caution).
 
 ```javascript
 import { unsafeUnbindKey } from 'keybuddy';
 
-unsafeUnbindKey('option+e')
-unsafeUnbindKey('option+e', 'myScope')
+unsafeUnbindKey('option+e');
+unsafeUnbindKey('option+e', 'myScope');
 ```
 
-#### destroy()
+### isBound(keysStr, options?)
 
-Remove all actions and event listeners
-
-
-### keybuddy(doc: HTMLDocument | HTMLElement, filterFn?)
-
-Keybuddy creator can be used to replace key bindings on document
-
-*filterFn* by default skip all editable areas - contenteditable, input, select, textarea
-
-The reasons that events like onpaste, oncopy want fire keyup event for key bindings
+Check if a shortcut is bound.
 
 ```javascript
-import { createKeybuddy } from 'keybuddy/keybuddy';
-const iframe = document.getElementById('#iframe').contentWindow;
-/**
-* { bind, unbind, unsafeUnbind, unbindScope, setScope, unbindAll, getScope:}
-*/
-const myKeybuddy = createKeybuddy(iframe, filterFn?) 
+import { bindKey, isBound } from 'keybuddy';
+
+bindKey('ctrl+s', saveHandler);
+isBound('ctrl+s'); // true
+isBound('ctrl+s', { scope: 'editor' }); // false
+```
+
+### getBoundKeys(options?)
+
+Get all bound shortcuts in current or specified scope.
+
+```javascript
+import { bindKey, getBoundKeys } from 'keybuddy';
+
+bindKey('ctrl+s', saveHandler);
+bindKey('ctrl+z', undoHandler);
+getBoundKeys(); // ['ctrl+s', 'ctrl+z']
+getBoundKeys({ scope: 'editor' }); // []
+```
+
+### getHandlers(keysStr, options?)
+
+Get all handlers for a specific shortcut.
+
+```javascript
+import { bindKey, getHandlers } from 'keybuddy';
+
+const save = () => console.log('save');
+bindKey('ctrl+s', save);
+getHandlers('ctrl+s'); // [save]
+```
+
+### getScope()
+
+Returns current scope.
+
+### setScope(scope)
+
+Change the active scope.
+
+### unbindScope(scope)
+
+Remove all actions in a scope.
+
+### unbindAll()
+
+Remove all actions.
+
+### destroy()
+
+Remove all actions and event listeners.
+
+## Custom Document / Iframe
+
+Use `createKeybuddy` to bind shortcuts to a different document or element.
+
+```javascript
+import { createKeybuddy } from 'keybuddy';
+
+const iframe = document.getElementById('iframe').contentWindow;
+const myKeybuddy = createKeybuddy(iframe.document);
 
 myKeybuddy.bind('alt+b', action);
 ```
 
+The default filter skips editable areas (contenteditable, input, select, textarea). You can provide a custom filter:
+
+```javascript
+const myKeybuddy = createKeybuddy(document, (e) => {
+  return true; // Handle all events
+});
+```
+
 For iframe usage examples, see [cypress/component/iframe-bindings.spec.ts](cypress/component/iframe-bindings.spec.ts).
 
-### Deno
-```typescript
-import key from "jsr:@keybuddy/core";
+## Deno
 
-key('a', e => handleKeyPress('a'))
-key('shift+r', e => handleKeyPress('shift+r'))
-key('⌘+shift+r, ctrl+shift+r', e => handleKeyPress('ctrl+shift+r'))
+```typescript
+import { bindKey } from 'jsr:@keybuddy/core';
+
+bindKey('a', (e) => handleKeyPress('a'));
+bindKey('shift+r', (e) => handleKeyPress('shift+r'));
 ```
