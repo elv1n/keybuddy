@@ -270,41 +270,22 @@ describe('Sequence Shortcuts', () => {
       expect(standaloneFn).to.have.callCount(1);
     });
 
-    it('should NOT fire standalone on sequence START key when sequence exists', () => {
+    it('should throw when binding standalone that conflicts with sequence START key', () => {
       const seqFn = cy.stub();
-      const startKeyFn = cy.stub();
 
       keyBuddy.bindKey('cmd+p cmd+k', seqFn);
-      keyBuddy.bindKey('cmd+p', startKeyFn);
 
-      // Pressing cmd+p should NOT fire standalone because sequence might be starting
-      fireCombination('cmd+p');
-      expect(startKeyFn).to.have.callCount(0);
-      expect(seqFn).to.have.callCount(0);
-
-      // Completing the sequence should fire sequence handler
-      fireCombination('cmd+k');
-      expect(seqFn).to.have.callCount(1);
-      expect(startKeyFn).to.have.callCount(0);
+      // Should throw because cmd+p standalone conflicts with cmd+p cmd+k sequence
+      expect(() => keyBuddy.bindKey('cmd+p', () => {})).to.throw();
     });
 
-    it('should NOT fire standalone cmd+k when sequence cmd+k e exists and is completed', () => {
-      const seqFn = cy.stub();
+    it('should throw when binding sequence that conflicts with existing standalone', () => {
       const standaloneFn = cy.stub();
 
-      keyBuddy.bindKey('cmd+k e', seqFn);
       keyBuddy.bindKey('cmd+k', standaloneFn);
 
-      // User does the full sequence: cmd+k followed by e
-      fireCombination('cmd+k');
-      // At this point, standalone should NOT fire because sequence might be in progress
-      // This is the bug - currently standalone fires here
-
-      fireCombination('e');
-      // Sequence completes
-
-      expect(seqFn).to.have.callCount(1);
-      expect(standaloneFn).to.have.callCount(0); // This will likely FAIL - standalone fired on cmd+k
+      // Should throw because cmd+k e sequence conflicts with cmd+k standalone
+      expect(() => keyBuddy.bindKey('cmd+k e', () => {})).to.throw();
     });
 
     it('should NOT fire standalone shortcut when sequence completes (simple keys)', () => {

@@ -38,6 +38,18 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/__test__/performance.bench.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ],
   "files": {
     "includes": ["src/**/*", "cypress/**/*", "*.js", "*.ts", "*.json"],
     "ignoreUnknown": false

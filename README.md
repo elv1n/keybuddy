@@ -197,12 +197,3 @@ const myKeybuddy = createKeybuddy(document, (e) => {
 ```
 
 For iframe usage examples, see [cypress/component/iframe-bindings.spec.ts](cypress/component/iframe-bindings.spec.ts).
-
-## Deno
-
-```typescript
-import { bindKey } from 'jsr:@keybuddy/core';
-
-bindKey('a', (e) => handleKeyPress('a'));
-bindKey('shift+r', (e) => handleKeyPress('shift+r'));
-```

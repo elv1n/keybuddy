@@ -1,5 +1,6 @@
 import { KeyString, MODIFIERS, ModifierNames, SPECIAL } from '../constants';
 import { getKeyIdentifier } from './keyboard';
+import { isEqArray } from './utils';
 
 export interface ParsedShortcut {
   mods: number;
@@ -11,6 +12,18 @@ export interface KeyMap {
   shortcut: ParsedShortcut;
   sequence?: KeyMap[];
 }
+
+const isEqKeyMap = (a: KeyMap, b: KeyMap): boolean =>
+  a.key === b.key &&
+  a.shortcut.mods === b.shortcut.mods &&
+  isEqArray(a.shortcut.special, b.shortcut.special);
+
+export const isEqSequence = (a?: KeyMap[], b?: KeyMap[]): boolean => {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  if (a.length !== b.length) return false;
+  return a.every((ka, i) => isEqKeyMap(ka, b[i]));
+};
 
 const getMods = (keys: string[]): ParsedShortcut =>
   keys.reduce(

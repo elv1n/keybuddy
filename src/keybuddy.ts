@@ -1,11 +1,17 @@
-import { CAPS_LOCK_KEY, DEFAULT_SCOPE, KeyString, MODS } from './constants';
+import invariant from 'invariant';
+import { CAPS_LOCK_KEY, DEFAULT_SCOPE, KeyString } from './constants';
 import {
   getKeyIdentifier,
   isModifierKey,
   updateModifiers,
 } from './helpers/keyboard';
-import { getKeyMap, KeyMap, ParsedShortcut } from './helpers/keymap';
-import { invariant, isEditable, isEqArray, isFirefox } from './helpers/utils';
+import {
+  getKeyMap,
+  isEqSequence,
+  KeyMap,
+  ParsedShortcut,
+} from './helpers/keymap';
+import { isEditable, isEqArray, isFirefox } from './helpers/utils';
 
 type KeyHandler = (e: KeyboardEvent) => void;
 type FilterFn = (el: KeyboardEvent) => boolean;
@@ -16,6 +22,7 @@ interface Handler {
   shortcut: ParsedShortcut;
   sequence?: KeyMap[];
   skipOther: boolean;
+  keysStr: string;
 }
 
 interface SequenceState {
@@ -72,6 +79,34 @@ export function createKeybuddy(
       handlers[key] = [];
     }
     const handlerList = handlers[key];
+
+    // Check for conflicting bindings between sequences and standalone shortcuts
+    const isSequence = sequence && sequence.length > 0;
+    const matchingShortcut = (h: Handler) =>
+      h.scope === scope &&
+      h.shortcut.mods === shortcut.mods &&
+      isEqArray(h.shortcut.special, shortcut.special);
+
+    if (isSequence) {
+      const conflictingStandalone = handlerList.find(
+        (h) => matchingShortcut(h) && !h.sequence?.length,
+      );
+      invariant(
+        !conflictingStandalone,
+        'Cannot bind sequence "%s" because standalone shortcut with same start key already exists',
+        keysStr,
+      );
+    } else {
+      const conflictingSequence = handlerList.find(
+        (h) => matchingShortcut(h) && h.sequence?.length,
+      );
+      invariant(
+        !conflictingSequence,
+        'Cannot bind standalone shortcut "%s" because a sequence starting with this key already exists',
+        keysStr,
+      );
+    }
+
     if (process.env.NODE_ENV === 'development') {
       if (skipOther) {
         const action = handlerList.find((i) => i.skipOther);
@@ -89,6 +124,7 @@ export function createKeybuddy(
       shortcut,
       sequence,
       skipOther,
+      keysStr,
     });
   };
 
@@ -97,15 +133,21 @@ export function createKeybuddy(
     deleteMethod: null | KeyHandler,
     deleteScope: string = DEFAULT_SCOPE,
   ): void => {
-    const { key, shortcut } = getKeyMap(keysStr);
+    const { key, shortcut, sequence } = getKeyMap(keysStr);
     const keyHandlers = handlers[key];
     if (Array.isArray(keyHandlers)) {
       const filtered = keyHandlers.filter(
-        ({ scope, method, shortcut: methodShortcut }: Handler) =>
+        ({
+          scope,
+          method,
+          shortcut: methodShortcut,
+          sequence: handlerSequence,
+        }: Handler) =>
           !(
             scope === deleteScope &&
             methodShortcut.mods === shortcut.mods &&
             isEqArray(methodShortcut.special, shortcut.special) &&
+            isEqSequence(handlerSequence, sequence) &&
             (deleteMethod === null ? true : method === deleteMethod)
           ),
       );
@@ -303,7 +345,7 @@ export function createKeybuddy(
 
   const isBound = (keysStr: string, options?: { scope?: string }): boolean => {
     const scope = options?.scope || activeScope;
-    const { key, shortcut } = getKeyMap(keysStr);
+    const { key, shortcut, sequence } = getKeyMap(keysStr);
     const keyHandlers = handlers[key];
     if (!keyHandlers) return false;
 
@@ -311,7 +353,8 @@ export function createKeybuddy(
       (h) =>
         h.scope === scope &&
         h.shortcut.mods === shortcut.mods &&
-        isEqArray(h.shortcut.special, shortcut.special),
+        isEqArray(h.shortcut.special, shortcut.special) &&
+        isEqSequence(h.sequence, sequence),
     );
   };
 
@@ -322,15 +365,7 @@ export function createKeybuddy(
     Object.values(handlers).forEach((handlerList) => {
       handlerList.forEach((handler) => {
         if (handler.scope === scope) {
-          const modParts: string[] = [];
-          if (handler.shortcut.mods & MODS.CTRL) modParts.push('ctrl');
-          if (handler.shortcut.mods & MODS.ALT) modParts.push('alt');
-          if (handler.shortcut.mods & MODS.SHIFT) modParts.push('shift');
-          if (handler.shortcut.mods & MODS.META) modParts.push('cmd');
-
-          const keyPart = handler.shortcut.special.join('+') || '';
-          const fullKey = [...modParts, keyPart].filter(Boolean).join('+');
-          if (fullKey) keys.add(fullKey);
+          keys.add(handler.keysStr);
         }
       });
     });
@@ -343,7 +378,7 @@ export function createKeybuddy(
     options?: { scope?: string },
   ): KeyHandler[] => {
     const scope = options?.scope || activeScope;
-    const { key, shortcut } = getKeyMap(keysStr);
+    const { key, shortcut, sequence } = getKeyMap(keysStr);
     const keyHandlers = handlers[key];
     if (!keyHandlers) return [];
 
@@ -352,7 +387,8 @@ export function createKeybuddy(
         (h) =>
           h.scope === scope &&
           h.shortcut.mods === shortcut.mods &&
-          isEqArray(h.shortcut.special, shortcut.special),
+          isEqArray(h.shortcut.special, shortcut.special) &&
+          isEqSequence(h.sequence, sequence),
       )
       .map((h) => h.method);
   };

@@ -5,6 +5,7 @@ onlyBuiltDependencies:
   - c
   - cypress
   - e
+  - esbuild
   - p
   - r
   - s
